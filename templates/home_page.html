@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link type="text/css" rel="stylesheet" href="/bootstrap/css/geoview.css">
+<script type="text/javascript" src="/bootstrap/jQRangeSlider-5.7.2/jQDateRangeSlider-min.js"></script>
+<link type="text/css" rel="stylesheet" href="/bootstrap/jQRangeSlider-5.7.2/css/classic-min.css">
+<script type="text/javascript" src="/bootstrap/js/markerclusterer.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-6">
+        <fieldset class="form-group row">
+            <legend class="col-form-legend col-sm-2">Tracking</legend>
+            {% for stream in streams %}
+                <a href="/view/{{ stream.key.urlsafe() }}">
+                    <p>{{ stream.stream_name }}</p>
+                </a>
+                <br>
+            {% endfor %}
+        </fieldset>
+    </div>
+    <div class="col-6">
+        <div id="map-container">
+		    <div id="map" class="map"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
