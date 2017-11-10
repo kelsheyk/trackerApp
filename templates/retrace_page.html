@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+
+<link type="text/css" rel="stylesheet" href="/bootstrap/css/geoview.css">
+<script type="text/javascript" src="/bootstrap/jQRangeSlider-5.7.2/jQDateRangeSlider-min.js"></script>
+<link type="text/css" rel="stylesheet" href="/bootstrap/jQRangeSlider-5.7.2/css/classic-min.css">
+<script type="text/javascript" src="/bootstrap/js/markerclusterer.js"></script>
+
+<script type="text/javascript">
+
+var currentData = [];
+
+var styles = [];
+var markerClusterer = null;
+var map = null;
+var imageUrl = '/bootstrap/marker-desat.png';
+
+function createInfoWindow(marker, contentString)
+{
+    var infoWindow = new google.maps.InfoWindow();
+    google.maps.event.addListener(marker, 'mouseover', function () {
+        infoWindow.setContent(contentString);
+        infoWindow.open(map, this);
+    });
+}
+// refreshMap
+function refreshMap(result) {
+    if (markerClusterer) {
+        markerClusterer.clearMarkers();
+    }
+    var markers = [];
+
+    var markerImage = new google.maps.MarkerImage(imageUrl, new google.maps.Size(24, 32));
+
+    for (var i = 0; i < result.length; i++) {
+        var pos = {lat: result[i].lat, lng: result[i].lon};
+        var marker = new google.maps.Marker({
+          position: pos,
+          map: map
+        });
+
+        var contentString = '<div><img src="' + result[i].url + '" width="100px" height="100px"></div>' + '<div>' + result[i].tracked_time + '</div>'
+        createInfoWindow(marker, contentString);
+        markers.push(marker);
+    }
+
+    var zoom = -1;
+    var size = -1;
+    var style = -1;
+    zoom = zoom == -1 ? null : zoom;
+    size = size == -1 ? null : size;
+    style = style == -1 ? null: style;
+    markerClusterer = new MarkerClusterer(map, markers, {
+        maxZoom: zoom,
+        gridSize: size,
+        styles: styles[style],
+        imagePath: "/bootstrap/m",
+    });
+    } //Done refresh
+
+
+// initialize
+function initialize() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 2,
+        center: new google.maps.LatLng(39.91, 116.38),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+    $.ajax({
+        url: '/get_geo_points/{{ stream_key }}',
+        dataType: 'json',
+        success: function(data) {
+            currentData = data;
+            initSlider(data);
+            refreshMap(data); 
+            //response(data);
+        }
+    });
+    
+}
+
+// clearClusters
+function clearClusters(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    markerClusterer.clearMarkers();
+}
+
+function initSlider(currentData) {
+    console.log(currentData);
+    var sortedData = currentData.sort(function(a, b){
+        var keyA = new Date(a.tracked_time),
+        keyB = new Date(b.tracked_time);
+        // Compare the 2 dates
+        if(keyA < keyB) return -1;
+        if(keyA > keyB) return 1;
+        return 0;
+    });
+    var min = sortedData[0].tracked_time;
+    var max = sortedData[sortedData.length-1].tracked_time;
+    $( "#slider-range" ).dateRangeSlider({
+        bounds:{
+            min: new Date(min),
+            max: new Date(max)
+        },
+        defaultValues:{
+            min: new Date(min),
+            max: new Date(max)
+        }
+    });
+    $("#slider-range").on("valuesChanged", function(e, data){
+        console.log("Something moved. min: " + data.values.min + " max: " + data.values.max);
+        var newData = currentData.filter(
+            function(item) {
+                var itemTime = new Date(item.tracked_time);
+                return (itemTime >= data.values.min && itemTime <= data.values.max)
+            }
+        );
+        refreshMap(newData);
+    });
+}
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+	<br>
+	<div id="slider-range" style="width: 85%"></div>
+	<p>
+		<label>Time range:</label>
+        <input type="text" id="time" readonly style="border: 0; color: #f6931f; font-weight: bold;">
+	</p>
+    <div id="map-container">
+		<div id="map" class="map"></div>
+    </div>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3-5HO3QVtS9GkIAglmwONnPlPf5Ea-gU&callback=initialize"
+  type="text/javascript"></script>
+{% endblock %}

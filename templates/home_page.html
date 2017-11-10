@@ -11,9 +11,9 @@
     <div class="col-6">
         <fieldset class="form-group row">
             <legend class="col-form-legend col-sm-2">Tracking</legend>
-            {% for stream in streams %}
-                <a href="/view/{{ stream.key.urlsafe() }}">
-                    <p>{{ stream.stream_name }}</p>
+            {% for member in tracked_people %}
+                <a href="/retrace/{{ member.key.urlsafe() }}">
+                    <p>{{ member.name }}</p>
                 </a>
                 <br>
             {% endfor %}

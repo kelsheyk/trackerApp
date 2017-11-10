@@ -25,6 +25,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 class Person(ndb.Model):
     user_id = ndb.StringProperty()
     email = ndb.StringProperty()
+    name = ndb.StringProperty()
 
     @classmethod
     def get_by_user(cls, user):

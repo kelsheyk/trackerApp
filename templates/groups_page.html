@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link type="text/css" rel="stylesheet" href="/bootstrap/css/groupPopup.css">
+<script type="text/javascript">
+    function addGroup() {
+        var popup = document.getElementById("addPopup");
+        popup.classList.toggle("show");
+    }
+    function delGroup(groupKey) {
+        console.log(groupKey);
+        // TODO: actually delete group
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+    <h2>Groups</h2>
+    {% for group in groups %}
+        <fieldset class="form-group row">
+            <legend class="col-form-legend col-sm-2">{{ group.group_name }}</legend>
+            {% for member in group.group_members %}
+                <a href="/retrace/{{ member.key.urlsafe() }}">
+                    <p>{{ member.name }}</p>
+                </a>
+                <br>
+            {% endfor %}
+            TODO: add new member drop-down
+            <a href="#" class="del-link" onclick="delGroup('{{ group.key.urlsafe() }}')">Delete Photo</a>            
+        </fieldset>
+    {% endfor %}
+    <button  onclick="addGroup()">Add a Group</button>
+    <div class="popup">
+        <span class="popupAdd" id="addPopup">
+            <form action="/groups" method="post">
+                <div class="form-group">
+                    <label> Group Name </label>
+                    <input name="group_name" type="text" required class="form-control"  />
+                </div>
+                <center>
+                    <button type="submit" class="btn btn-primary">
+                        Create Group
+                    </button>
+                </center>
+            </form>
+        </span>
+    </div>
+{% endblock %}

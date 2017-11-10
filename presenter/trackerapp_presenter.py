@@ -79,10 +79,9 @@ class Auth(webapp2.RequestHandler):
                 ### 'stream_name_label': Stream.stream_name._verbose_name,
                 'auth_url': auth_url,
                 'url_link_text': url_link_text,
-                'url': submit_url,
             }
 
-            template = JINJA_ENVIRONMENT.get_template('create_stream.html')
+            template = JINJA_ENVIRONMENT.get_template('home_page.html')
             self.response.write(template.render(template_values))
         else:
             # Return the login page
@@ -115,8 +114,15 @@ class HomePage(webapp2.RequestHandler):
             self.redirect("/auth")
             return
 
-        #TODO: Fetch Tracked People
         tracked_people = []
+        person_obj = Person.get_by_user(current_user)
+        groups_query = Groupw.query(
+            Group.group_owner == person_obj
+        )
+        groups = groups_query.fetch()
+        for group in groups:
+            for member in group.group_members:
+                tracked_people.append(member)
 
         template_values = {
             'navigation': NAV_LINKS,
@@ -131,7 +137,6 @@ class HomePage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('home_page.html')
         self.response.write(template.render(template_values))
 # [END HomePage]
-      
 
 # [START ErrorPage]
 class ErrorPage(webapp2.RequestHandler):
@@ -141,10 +146,93 @@ class ErrorPage(webapp2.RequestHandler):
         self.response.write(template.render())
 # [END ErrorPage]
 
+# [START RetracePage]
+class RetracePage(webapp2.RequestHandler):
+
+    def get(self, person_key_str):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+        if current_user is None:
+            self.redirect("/auth")
+            return
+
+        person_key = ndb.Key(urlsafe=person_key_str)
+        person_obj = person_key.get()
+
+        person_location_query = LocationPoint.query(
+            LocationPoint.person == Person(
+                email=current_user.email()
+            )
+            # TODO: Is this better? -- test w/ data
+            #LocationPoint.person == person_obj
+        )
+        location_points = person_location_query.fetch()
+        sorted_location_points = sorted(location_points, key=lambda s: s.tracked_time)
+
+        template_values = {
+            'navigation': NAV_LINKS,
+            'user': current_user,
+            'page_header': "TrackerApp",
+            'tracked_user_key': user_key_str,
+            'tracked_user_obj': user_obj,
+            'location_points': sorted_location_points,
+            'auth_url': auth_url,
+            'url_link_text': url_link_text,
+        }
+        template = JINJA_ENVIRONMENT.get_template('retrace_page.html')
+        self.response.write(template.render(template_values))
+# [END RetracePage]
+
+# [START GroupsPage]
+class GroupsPage(webapp2.RequestHandler):
+
+    def get(self):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+        if current_user is None:
+            self.redirect("/auth")
+            return
+        person_obj = Person.get_by_user(current_user)
+        groups_query = Group.query(
+            Group.group_owner == person_obj
+        )
+        groups = groups_query.fetch()
+
+        template_values = {
+            'navigation': NAV_LINKS,
+            'user': current_user,
+            'page_header': "TrackerApp",
+            'groups': groups,
+            'auth_url': auth_url,
+            'url_link_text': url_link_text,
+        }
+        template = JINJA_ENVIRONMENT.get_template('groups_page.html')
+        self.response.write(template.render(template_values))
+
+    # This will me used to add a group only
+    def post(self):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+
+        if current_user is None:
+            self.redirect("/auth")
+            return
+        person_obj = Person.get_by_user(current_user)
+
+        group = Group(
+            group_members=[],
+            group_owner=person_obj,
+            group_name=self.request.get('group_name'),
+        )
+
+        group_key = group.put()
+        self.redirect('/groups')
+# [END GroupsPage]
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', Auth),
     ('/home', HomePage),
     ('/error',ErrorPage),
+    ('/retrace/(.+)',RetracePage),
+    ('/groups',GroupsPage),
 ], debug=True)
 # [END app]

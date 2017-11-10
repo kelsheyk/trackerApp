@@ -1,0 +1,8 @@
+    fieldset {
+        border: 2px black solid;
+        border-radius: 5px;
+    }
+    .col-form-legend {
+        margin-left: 10px;
+        font-weight: bold;
+    }
