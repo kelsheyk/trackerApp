@@ -54,10 +54,17 @@ def check_auth(request, isAppRequest=False):
         return current_user, "", "", app_connection
 
     current_user = users.get_current_user()
-    logging.info(current_user)
     if current_user:
         auth_url = users.create_logout_url(request.uri)
         url_link_text = 'Logout'
+        person_obj = Person.get_by_user(current_user)
+        if person_obj is None:
+            #TODO: get full name from google profile?
+            person = Person(
+                user_id = current_user.user_id(),
+                email = current_user.email(),
+            )
+            p_key = person.put()
     else:
         auth_url = users.create_login_url(request.uri)
         url_link_text = 'Login'
@@ -100,7 +107,6 @@ class Auth(webapp2.RequestHandler):
         current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
 
         tp = users.User(self.request.get("userEmail"))
-        # TODO Use this userEmail and Password to sign in
         
         self.redirect(submit_url)
 # [END UserAuthentication]
@@ -116,7 +122,7 @@ class HomePage(webapp2.RequestHandler):
 
         tracked_people = []
         person_obj = Person.get_by_user(current_user)
-        groups_query = Groupw.query(
+        groups_query = Group.query(
             Group.group_owner == person_obj
         )
         groups = groups_query.fetch()
@@ -128,7 +134,7 @@ class HomePage(webapp2.RequestHandler):
             'navigation': NAV_LINKS,
             'user': current_user,
             'page_title': "TrackerApp",
-            'page_header': "TrackerApp Home",
+            'page_header': "TrackerApp",
             'tracked_people': tracked_people,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
@@ -200,6 +206,8 @@ class GroupsPage(webapp2.RequestHandler):
             'navigation': NAV_LINKS,
             'user': current_user,
             'page_header': "TrackerApp",
+            'current_user': current_user,
+            'person_obj': person_obj,
             'groups': groups,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
@@ -229,7 +237,8 @@ class GroupsPage(webapp2.RequestHandler):
 
 # [START app]
 app = webapp2.WSGIApplication([
-    ('/', Auth),
+    ('/', HomePage),
+    ('/auth', Auth),
     ('/home', HomePage),
     ('/error',ErrorPage),
     ('/retrace/(.+)',RetracePage),

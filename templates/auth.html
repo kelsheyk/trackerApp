@@ -2,10 +2,5 @@
 
 {% block content %}
     <h2>TrackerApp</h2>
-    <form action="/auth" method="post">
-        <input type="email" name="userEmail" placeholder="Gmail UserID"><br><br>
-        <input type="password" name="userPassword" placeholder="Gmail Password"><br><br>
-        <!--HACKED FOR NOW-->
         <a href="{{ auth_url }}" class="btn">{{ url_link_text }}</a>
-    </form>
 {% endblock %}
