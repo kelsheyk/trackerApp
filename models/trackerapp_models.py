@@ -38,6 +38,9 @@ class Group(ndb.Model):
     group_owner = ndb.StructuredProperty(Person)
     group_name = ndb.StringProperty(verbose_name="Name")
     group_members = ndb.StructuredProperty(Person, repeated=True)
+
+    class RESTMeta:
+        user_owner_property = 'group_owner'
 # [END Group]
 
 # [START LocationPoint]
@@ -67,6 +70,9 @@ class LocationAlert(ndb.Model):
     alert_time_end = ndb.TimeProperty()
     # direction: False = outward, True = inward
     alert_direction = ndb.BooleanProperty(default=False)
+
+    class RESTMeta:
+        user_owner_property = 'alert_owner'
 # [END LocationAlert]
 
 

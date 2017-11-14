@@ -202,13 +202,15 @@ class GroupsPage(webapp2.RequestHandler):
         )
         groups = groups_query.fetch()
 
+        all_users = Person.query().fetch()
+
         template_values = {
             'navigation': NAV_LINKS,
-            'user': current_user,
             'page_header': "TrackerApp",
             'current_user': current_user,
             'person_obj': person_obj,
             'groups': groups,
+            'all_users': all_users,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
         }
@@ -243,5 +245,64 @@ app = webapp2.WSGIApplication([
     ('/error',ErrorPage),
     ('/retrace/(.+)',RetracePage),
     ('/groups',GroupsPage),
+
+    # REST interface (Person example, use any Model)
+    # GET all people: /rest/people    returns list of all Person objects in "results" key
+    # GET a particular Person:  /rest/people/<person ID>
+    # GET filtered list of people: /rest/people?q=<GQL query>  
+    #    Example: /rest/people?q=email%3D%27kelseyking511@gmail.com%27
+    #
+    #TODO: add docs on POST,PUT,DELETE
+
+    
+    # REST endpoints reference:
+    #   /rest/people
+    #   /rest/groups
+    #   /rest/locations
+    #   /rest/alerts
+    RESTHandler(
+        '/rest/people', # The base URL for this model's endpoints
+        Person, # The model to wrap
+        permissions={
+            'GET': PERMISSION_ANYONE,
+            'POST': PERMISSION_ANYONE,
+            'PUT': PERMISSION_ANYONE,
+            'DELETE': PERMISSION_ANYONE
+        },
+        # Will be called for every PUT, right before the model is saved (also supports GET/POST/DELETE)
+        #put_callback=lambda model, data: model
+    ),
+    RESTHandler(
+        '/rest/groups',
+        Group, 
+        permissions={
+            'GET': PERMISSION_ANYONE,
+            'POST': PERMISSION_ANYONE,
+            'PUT': PERMISSION_OWNER_USER,
+            'DELETE': PERMISSION_OWNER_USER
+        },
+    ),
+    RESTHandler(
+        '/rest/locations',
+        LocationPoint, 
+        permissions={
+            'GET': PERMISSION_ANYONE,
+            'POST': PERMISSION_ANYONE,
+            'PUT': PERMISSION_ANYONE,
+            'DELETE': PERMISSION_ANYONE
+        },
+    ),
+    RESTHandler(
+        '/rest/alerts', 
+        Group, 
+        permissions={
+            'GET': PERMISSION_ANYONE,
+            'POST': PERMISSION_ANYONE,
+            'PUT': PERMISSION_OWNER_USER,
+            'DELETE': PERMISSION_OWNER_USER
+        },
+        # Will be called for every PUT, right before the model is saved (also supports GET/POST/DELETE)
+        #put_callback=lambda model, data: model
+    ),
 ], debug=True)
 # [END app]
