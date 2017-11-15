@@ -123,12 +123,13 @@ class HomePage(webapp2.RequestHandler):
         tracked_people = []
         person_obj = Person.get_by_user(current_user)
         groups_query = Group.query(
-            Group.group_owner == person_obj
+            Group.group_owner == person_obj.user_id
         )
         groups = groups_query.fetch()
         for group in groups:
-            for member in group.group_members:
-                tracked_people.append(member)
+            for member_id in group.group_members:
+                person = Person.query(Person.user_id == member_id).get()
+                tracked_people.append(person)
 
         template_values = {
             'navigation': NAV_LINKS,
@@ -161,15 +162,10 @@ class RetracePage(webapp2.RequestHandler):
             self.redirect("/auth")
             return
 
-        person_key = ndb.Key(urlsafe=person_key_str)
-        person_obj = person_key.get()
+        person_obj = Person.query(Person.user_id == person_key_str).get()
 
         person_location_query = LocationPoint.query(
-            LocationPoint.person == Person(
-                email=current_user.email()
-            )
-            # TODO: Is this better? -- test w/ data
-            #LocationPoint.person == person_obj
+            LocationPoint.tracked_person == current_user.user_id() 
         )
         location_points = person_location_query.fetch()
         sorted_location_points = sorted(location_points, key=lambda s: s.tracked_time)
@@ -178,8 +174,7 @@ class RetracePage(webapp2.RequestHandler):
             'navigation': NAV_LINKS,
             'user': current_user,
             'page_header': "TrackerApp",
-            'tracked_user_key': user_key_str,
-            'tracked_user_obj': user_obj,
+            'tracked_user_obj': person_obj,
             'location_points': sorted_location_points,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
@@ -198,9 +193,16 @@ class GroupsPage(webapp2.RequestHandler):
             return
         person_obj = Person.get_by_user(current_user)
         groups_query = Group.query(
-            Group.group_owner == person_obj
+            Group.group_owner == str(person_obj.user_id)
         )
         groups = groups_query.fetch()
+        
+        group_members = {}
+        for group in groups:
+            group_members[group.key.urlsafe()] = []
+            for member_id in group.group_members:
+                member_person = Person.query(Person.user_id == member_id).get()
+                group_members[group.key.urlsafe()].append(member_person)
 
         all_users = Person.query().fetch()
 
@@ -210,6 +212,7 @@ class GroupsPage(webapp2.RequestHandler):
             'current_user': current_user,
             'person_obj': person_obj,
             'groups': groups,
+            'group_members': group_members,
             'all_users': all_users,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
@@ -217,8 +220,8 @@ class GroupsPage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('groups_page.html')
         self.response.write(template.render(template_values))
 
-    # This will me used to add a group only
-    def post(self):
+    # This will me used to add user to Group only
+    def post(self, group_key_str):
         current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
 
         if current_user is None:
@@ -226,16 +229,30 @@ class GroupsPage(webapp2.RequestHandler):
             return
         person_obj = Person.get_by_user(current_user)
 
-        group = Group(
-            group_members=[],
-            group_owner=person_obj,
-            group_name=self.request.get('group_name'),
-        )
+        group_key = ndb.Key(urlsafe=group_key_str)
+        group_obj = group_key.get()
+        
+        added_person_key_str = self.request.get("addUser")
+        added_person_key = ndb.Key(urlsafe=added_person_key_str)
+        added_person = added_person_key.get()
 
-        group_key = group.put()
+        if len(list(group_obj.group_members)):
+            members = [p for p in group_obj.group_members]
+            members.append(added_person.user_id)
+            group_obj.group_members = members
+        else:
+            members = []
+            members.append(added_person.user_id)
+            group_obj.group_members = members
+
+        group_obj.put()
         self.redirect('/groups')
 # [END GroupsPage]
 
+config = {}
+config['webapp2_extras.sessions'] = {
+    'secret_key': 'my-super-secret-key',
+}
 
 # [START app]
 app = webapp2.WSGIApplication([
@@ -245,6 +262,7 @@ app = webapp2.WSGIApplication([
     ('/error',ErrorPage),
     ('/retrace/(.+)',RetracePage),
     ('/groups',GroupsPage),
+    ('/groups/(.+)',GroupsPage),
 
     # REST interface (Person example, use any Model)
     # GET all people: /rest/people    returns list of all Person objects in "results" key
@@ -279,8 +297,9 @@ app = webapp2.WSGIApplication([
             'GET': PERMISSION_ANYONE,
             'POST': PERMISSION_ANYONE,
             'PUT': PERMISSION_OWNER_USER,
-            'DELETE': PERMISSION_OWNER_USER
+            'DELETE': PERMISSION_ANYONE
         },
+        #post_callback=
     ),
     RESTHandler(
         '/rest/locations',
@@ -304,5 +323,5 @@ app = webapp2.WSGIApplication([
         # Will be called for every PUT, right before the model is saved (also supports GET/POST/DELETE)
         #put_callback=lambda model, data: model
     ),
-], debug=True)
+], config=config, debug=True)
 # [END app]

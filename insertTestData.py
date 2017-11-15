@@ -18,11 +18,11 @@ import datetime
 # 3. Copy/paste this file into console and execute.
 # NOTE: Executing this file more than once will create duplicate users.
 
-mary = Person(email='mary@dummyUser.com')
-bob = Person(email='bob@dummyUser.com')
-joe = Person(email='joe@dummyUser.com')
-jane = Person(email='jane@dummyUser.com')
-larry = Person(email='larry@dummyUser.com')
+mary = Person(email='mary@dummyUser.com', user_id='1')
+bob = Person(email='bob@dummyUser.com', user_id='2')
+joe = Person(email='joe@dummyUser.com', user_id='3')
+jane = Person(email='jane@dummyUser.com', user_id='4')
+larry = Person(email='larry@dummyUser.com', user_id='5')
 
 people = []
 people.append(mary)
