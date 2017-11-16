@@ -173,18 +173,12 @@ class RetracePage(webapp2.RequestHandler):
 
         person_obj = Person.query(Person.user_id == person_key_str).get()
 
-        person_location_query = LocationPoint.query(
-            LocationPoint.tracked_person == current_user.user_id() 
-        )
-        location_points = person_location_query.fetch()
-        sorted_location_points = sorted(location_points, key=lambda s: s.tracked_time)
-
         template_values = {
             'navigation': NAV_LINKS,
             'user': current_user,
             'page_header': "TrackerApp",
             'tracked_user_obj': person_obj,
-            'location_points': sorted_location_points,
+            'tracked_user_id': person_key_str,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
         }
@@ -334,6 +328,9 @@ app = webapp2.WSGIApplication([
         },
         #post_callback=
     ),
+    
+    # Get list of locations by user_id:
+    #/rest/locations?q=tracked_person%3D%27{{ user_id }}%27&order=tracked_time
     RESTHandler(
         '/rest/locations',
         LocationPoint, 

@@ -15,4 +15,9 @@ indexes:
   properties:
   - name: tracked_person
   - name: tracked_time
+
+- kind: LocationPoint
+  properties:
+  - name: tracked_person
+  - name: tracked_time
     direction: desc

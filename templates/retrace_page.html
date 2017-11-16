@@ -34,13 +34,16 @@ function refreshMap(result) {
     var markerImage = new google.maps.MarkerImage(imageUrl, new google.maps.Size(24, 32));
 
     for (var i = 0; i < result.length; i++) {
-        var pos = {lat: result[i].lat, lng: result[i].lon};
+        //var pos = {lat: result[i].lat, lng: result[i].lon};
+        var lat = parseFloat(result[i].tracked_location.split(',')[0]);
+        var lon = parseFloat(result[i].tracked_location.split(',')[1]);
+        var pos = {lat: lat, lng: lon};
         var marker = new google.maps.Marker({
-          position: pos,
+            position: pos,
           map: map
         });
 
-        var contentString = '<div><img src="' + result[i].url + '" width="100px" height="100px"></div>' + '<div>' + result[i].tracked_time + '</div>'
+        var contentString = result[i].tracked_time
         createInfoWindow(marker, contentString);
         markers.push(marker);
     }
@@ -51,30 +54,33 @@ function refreshMap(result) {
     zoom = zoom == -1 ? null : zoom;
     size = size == -1 ? null : size;
     style = style == -1 ? null: style;
-    markerClusterer = new MarkerClusterer(map, markers, {
-        maxZoom: zoom,
-        gridSize: size,
-        styles: styles[style],
-        imagePath: "/bootstrap/m",
-    });
+    //markerClusterer = new MarkerClusterer(map, markers, {
+    //    maxZoom: zoom,
+    //    gridSize: size,
+    //    styles: styles[style],
+    //    imagePath: "/bootstrap/m",
+    //});
+    var markerCluster = new MarkerClusterer(map, markers,
+            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
     } //Done refresh
 
 
 // initialize
 function initialize() {
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 2,
-        center: new google.maps.LatLng(39.91, 116.38),
+        zoom: 10,
+        center: new google.maps.LatLng(30.2, -97.7),
         mapTypeId: google.maps.MapTypeId.ROADMAP
     });
 
     $.ajax({
-        url: '/get_geo_points/{{ stream_key }}',
+        url: '/rest/locations?q=tracked_person%3D%27{{ tracked_user_id }}%27&order=tracked_time',
         dataType: 'json',
         success: function(data) {
-            currentData = data;
-            initSlider(data);
-            refreshMap(data); 
+            console.log(data.results);
+            currentData = data.results;
+            initSlider(data.results);
+            refreshMap(data.results); 
             //response(data);
         }
     });
