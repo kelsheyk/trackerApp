@@ -1,28 +1,58 @@
 {% extends "base.html" %}
 {% block extra_head %}
 <link type="text/css" rel="stylesheet" href="/bootstrap/css/geoview.css">
-<script type="text/javascript" src="/bootstrap/jQRangeSlider-5.7.2/jQDateRangeSlider-min.js"></script>
-<link type="text/css" rel="stylesheet" href="/bootstrap/jQRangeSlider-5.7.2/css/classic-min.css">
-<script type="text/javascript" src="/bootstrap/js/markerclusterer.js"></script>
+
+<script type="text/javascript">
+function initialize() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 12,
+        center: new google.maps.LatLng(30.2, -97.7),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+    $.ajax({
+        url: '/get_tracked',
+        dataType: 'json',
+        success: function(data) {
+            console.log(data);
+            data.forEach(function(p) {
+                var infowindow = new google.maps.InfoWindow({
+                    content: p.user
+                });
+                var point = new google.maps.LatLng(p.lat, p.lon);
+                var marker = new google.maps.Marker({
+                    position: point,
+                    map: map,
+                    title: p.user
+                });
+                marker.addListener('click', function() {
+                    infowindow.open(map, marker);
+                });
+            })
+        }
+    });
+}
+</script>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-6">
-        <fieldset class="form-group row">
-            <legend class="col-form-legend col-sm-2">Tracking</legend>
-            {% for member in tracked_people %}
-                <a href="/retrace/{{ member.user_id }}">
-                    <p>{{ member.email }}</p>
-                </a>
-                <br>
-            {% endfor %}
-        </fieldset>
-    </div>
-    <div class="col-6">
-        <div id="map-container">
-		    <div id="map" class="map"></div>
+    <div class="row">
+        <div class="col-6">
+            <fieldset class="form-group row">
+                <legend class="col-form-legend col-sm-2">Tracking</legend>
+                {% for member in tracked_people %}
+                    <a href="/retrace/{{ member.user_id }}">
+                        <p>{{ member.email }}</p>
+                    </a>
+                {% endfor %}
+            </fieldset>
+        </div>
+        <div class="col-6">
+            <div id="map-container">
+    		    <div id="map" class="map"></div>
+            </div>
         </div>
     </div>
-</div>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3-5HO3QVtS9GkIAglmwONnPlPf5Ea-gU&callback=initialize"
+  type="text/javascript"></script>
 {% endblock %}

@@ -121,6 +121,7 @@ class HomePage(webapp2.RequestHandler):
             return
 
         tracked_people = []
+        locations = []
         person_obj = Person.get_by_user(current_user)
         groups_query = Group.query(
             Group.group_owner == person_obj.user_id
@@ -130,6 +131,13 @@ class HomePage(webapp2.RequestHandler):
             for member_id in group.group_members:
                 person = Person.query(Person.user_id == member_id).get()
                 tracked_people.append(person)
+                location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
+                if len(location_list):
+                    locations.append({
+                        'user':person.email,
+                        'lat':location_list[0].tracked_location.lat,
+                        'lon':location_list[0].tracked_location.lon
+                    })
 
         template_values = {
             'navigation': NAV_LINKS,
@@ -137,6 +145,7 @@ class HomePage(webapp2.RequestHandler):
             'page_title': "TrackerApp",
             'page_header': "TrackerApp",
             'tracked_people': tracked_people,
+            'locations': locations,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
         }
@@ -249,6 +258,29 @@ class GroupsPage(webapp2.RequestHandler):
         self.redirect('/groups')
 # [END GroupsPage]
 
+class GetTracked(webapp2.RequestHandler):
+    def get(self):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+        person_obj = Person.get_by_user(current_user)
+
+        locations = []
+        groups_query = Group.query(
+            Group.group_owner == person_obj.user_id
+        )
+        groups = groups_query.fetch()
+        for group in groups:
+            for member_id in group.group_members:
+                person = Person.query(Person.user_id == member_id).get()
+                location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
+                if len(location_list):
+                    locations.append({
+                        'user':person.email,
+                        'lat':location_list[0].tracked_location.lat,
+                        'lon':location_list[0].tracked_location.lon
+                    })
+        self.response.out.write(json.dumps(locations))
+
+
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
@@ -263,6 +295,7 @@ app = webapp2.WSGIApplication([
     ('/retrace/(.+)',RetracePage),
     ('/groups',GroupsPage),
     ('/groups/(.+)',GroupsPage),
+    ('/get_tracked', GetTracked),
 
     # REST interface (Person example, use any Model)
     # GET all people: /rest/people    returns list of all Person objects in "results" key

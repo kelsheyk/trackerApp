@@ -57,7 +57,7 @@ while current_time < now:
         lon = longitude + random.random()/10
         current_time = current_time + freq
         loc = LocationPoint(
-            tracked_person=person,
+            tracked_person=person.user_id,
             tracked_time=current_time,
             tracked_location=ndb.GeoPt(lat,lon)
         )
