@@ -12,7 +12,7 @@
 var currentData = [];
 
 var styles = [];
-var markerClusterer = null;
+var markerCluster = null;
 var map = null;
 var imageUrl = '/bootstrap/marker-desat.png';
 
@@ -26,8 +26,8 @@ function createInfoWindow(marker, contentString)
 }
 // refreshMap
 function refreshMap(result) {
-    if (markerClusterer) {
-        markerClusterer.clearMarkers();
+    if (markerCluster) {
+        markerCluster.clearMarkers();
     }
     var markers = [];
 
@@ -54,13 +54,7 @@ function refreshMap(result) {
     zoom = zoom == -1 ? null : zoom;
     size = size == -1 ? null : size;
     style = style == -1 ? null: style;
-    //markerClusterer = new MarkerClusterer(map, markers, {
-    //    maxZoom: zoom,
-    //    gridSize: size,
-    //    styles: styles[style],
-    //    imagePath: "/bootstrap/m",
-    //});
-    var markerCluster = new MarkerClusterer(map, markers,
+    markerCluster = new MarkerClusterer(map, markers,
             {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
     } //Done refresh
 
@@ -114,6 +108,14 @@ function initSlider(currentData) {
         defaultValues:{
             min: new Date(min),
             max: new Date(max)
+        },
+        formatter:function(val){
+            var days = val.getDate(),
+            month = val.getMonth() + 1,
+            year = val.getFullYear(),
+            hour = val.getUTCHours() + 1,
+            mins = val.getUTCMinutes() + 1;
+            return days + "/" + month + "/" + year + " -- " + hour + ":" + mins;
         }
     });
     $("#slider-range").on("valuesChanged", function(e, data){
@@ -121,6 +123,8 @@ function initSlider(currentData) {
         var newData = currentData.filter(
             function(item) {
                 var itemTime = new Date(item.tracked_time);
+                console.log(itemTime);
+                console.log((itemTime >= data.values.min && itemTime <= data.values.max));
                 return (itemTime >= data.values.min && itemTime <= data.values.max)
             }
         );
