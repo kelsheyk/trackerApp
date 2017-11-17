@@ -1,0 +1,98 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/blue_grey_700"
+    android:weightSum="4"
+    tools:context=".LoginActivity"
+    android:orientation="vertical"
+    android:baselineAligned="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:weightSum="1">
+
+
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_weight="0.06"
+            android:gravity="center"
+            android:text="@string/title_text"
+            android:textColor="@android:color/holo_orange_light"
+            android:textSize="40sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/google_icon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@+id/button_sign_in"
+            android:layout_alignRight="@+id/button_sign_in"
+            android:layout_centerVertical="true"
+            android:layout_marginBottom="10dp"
+            android:contentDescription="@string/desc_google_icon"
+            android:src="@drawable/googleg_color" />
+
+        <TextView
+            android:id="@+id/sign_in_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_weight="0.06"
+            android:text="Google sign on failed!"
+            android:textAlignment="center"
+            android:textColor="@android:color/holo_red_light"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/button_sign_in"
+            android:layout_width="214dp"
+            android:layout_height="68dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/rounded_button"
+            android:text="@string/common_signin_button_text"
+            android:textAlignment="center"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:theme="@style/ThemeOverlay.MyDarkButton"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/my_list_button"
+            android:layout_width="216dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_weight="0.13"
+            android:background="@drawable/rounded_button"
+            android:text="My List"
+            android:textStyle="bold"
+            android:theme="@style/ThemeOverlay.MyDarkButton" />
+
+        <Button
+            android:id="@+id/button_sign_out"
+            android:layout_width="217dp"
+            android:layout_height="68dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:text="@string/sign_out"
+            android:textAlignment="center"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:theme="@style/ThemeOverlay.MyDarkButton"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+
+</LinearLayout>
