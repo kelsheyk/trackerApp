@@ -275,6 +275,59 @@ class GetTracked(webapp2.RequestHandler):
         self.response.out.write(json.dumps(locations))
 
 
+# [START AlertsPage]
+class AlertsPage(webapp2.RequestHandler):
+
+    def get(self):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+        if current_user is None:
+            self.redirect("/auth")
+            return
+        person_obj = Person.get_by_user(current_user)
+        alerts_query = LocationAlert.query(
+            LocationAlert.alert_owner == str(person_obj.user_id)
+        )
+        alerts = alerts_query.fetch()
+        
+
+        template_values = {
+            'navigation': NAV_LINKS,
+            'page_header': "TrackerApp",
+            'current_user': current_user,
+            'person_obj': person_obj,
+            'alerts': alerts,
+            'auth_url': auth_url,
+            'url_link_text': url_link_text,
+        }
+        template = JINJA_ENVIRONMENT.get_template('alerts_page.html')
+        self.response.write(template.render(template_values))
+# [END AlertsPage]
+
+# [START AlertCreate]
+class AlertCreate(webapp2.RequestHandler):
+
+    def get(self):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+        if current_user is None:
+            self.redirect("/auth")
+            return
+        person_obj = Person.get_by_user(current_user)
+       
+        all_users = Person.query().fetch()
+
+        template_values = {
+            'navigation': NAV_LINKS,
+            'page_header': "TrackerApp",
+            'current_user': current_user,
+            'person_obj': person_obj,
+            'all_users': all_users,
+            'auth_url': auth_url,
+            'url_link_text': url_link_text,
+        }
+        template = JINJA_ENVIRONMENT.get_template('alert_form_page.html')
+        self.response.write(template.render(template_values))
+# [END AlertCreate]
+
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
@@ -290,6 +343,8 @@ app = webapp2.WSGIApplication([
     ('/groups',GroupsPage),
     ('/groups/(.+)',GroupsPage),
     ('/get_tracked', GetTracked),
+    ('/alerts',AlertsPage),
+    ('/alert_create', AlertCreate),
 
     # REST interface (Person example, use any Model)
     # GET all people: /rest/people    returns list of all Person objects in "results" key

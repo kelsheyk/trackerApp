@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link  rel="stylesheet" href="bootstrap/css/bootstrap-combined.min.css" rel="stylesheet" type="text/css" />
+
+
+<script type="text/javascript" src="bootstrap/js/bootstrap-multiselect.js"></script>
+<link rel="stylesheet" href="bootstrap/css/bootstrap-multiselect.css" type="text/css"/>
+
+<link type="text/css" rel="stylesheet" href="/bootstrap/css/geoview.css">
+<script type="text/javascript">
+function initialize() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 12,
+        center: new google.maps.LatLng(30.2, -97.7),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+}
+</script>
+
+{% endblock %}
+
+{% block content %}
+    <form action="/create" method="post">
+        <div class="row">
+            <div class="col-6" align="left">
+                <div class="form-group row">
+                    <div class="col-2">
+                        <label>Nickname</label>
+                    </div>
+                    <div class="col-10">
+                        <input name="alert_name" type="text" required class="form-control"  />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-2">
+                        <label>Users</label>
+                    </div>
+                    <div class="col-10">
+                        <select name="alert_tracked_people" id="alert_tracked_people" multiple="multiple">
+                            {% for u in all_users %}
+                                <option value={{ u.key.urlsafe() }}>{{ u.email }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-2">
+                        <label style="margin-top:20px">Days</label>
+                    </div>
+                    <div class="col-10">
+                        <div class="row">
+                            <div class="col-1" align="left">
+                              <input type="checkbox" id="alert_day_sun" name="alert_day_sun" value="alert_day_sun">
+                              <label for="alert_day_sun">Sun</label>
+                            </div>
+                            <div class="col-1" align="left">
+                              <input type="checkbox" id="alert_day_mon" name="alert_day_mon" value="alert_day_monn">
+                              <label for="alert_day_mon">Mon</label>
+                            </div>
+                            <div class="col-1" align="left">
+                              <input type="checkbox" id="alert_day_tue" name="alert_day_tue" value="alert_day_tue">
+                              <label for="alert_day_tue">Tue</label>
+                            </div>
+                            <div class="col-1" align="left">
+                              <input type="checkbox" id="alert_day_wed" name="alert_day_wed" value="alert_day_wed">
+                              <label for="alert_day_wed">Wed</label>
+                            </div>
+                            <div class="col-1" align="left">
+                              <input type="checkbox" id="alert_day_thu" name="alert_day_thu" value="alert_day_thu">
+                              <label for="alert_day_thu">Thu</label>
+                            </div>
+                            <div class="col-1" align="left">
+                              <input type="checkbox" id="alert_day_fri" name="alert_day_fri" value="alert_day_fri">
+                              <label for="alert_day_fri">Fri</label>
+                            </div>
+                            <div class="col-1" align="left">
+                              <input type="checkbox" id="alert_day_sat" name="alert_day_sat" value="alert_day_sat">
+                              <label for="alert_day_sat">Sat</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div id="map-container">
+	            	<div id="map" class="map"></div>
+                </div>
+            </div>
+            <div class="col-12">
+                <center>
+                    <button type="submit" class="btn btn-primary">
+                        Submit 
+                    </button>
+                </center>
+            </div>
+        </div>
+
+
+    </form>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#alert_tracked_people').multiselect();
+    });
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3-5HO3QVtS9GkIAglmwONnPlPf5Ea-gU&callback=initialize"
+  type="text/javascript"></script>
+
+{% endblock %}
+

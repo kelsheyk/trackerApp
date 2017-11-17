@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link type="text/css" rel="stylesheet" href="/bootstrap/css/groupPopup.css">
+<script type="text/javascript">
+    function createAlert() {
+        window.location.replace('/create_alert')
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+    <h2>Manage Alerts</h2>
+        <fieldset class="form-group row">
+            <legend class="col-form-legend col-sm-2">Alerts</legend>
+            {% for alert in alerts %}
+                <span>
+                    {{ alert.alert_name }} 
+                    <a href="/edit_alert/{{ alert.key.urlsafe() }}">
+                        Edit
+                    </a>
+                </span>
+            {% endfor %}
+        </fieldset>
+    <button  onclick="createAlert()">Create Alert</button>
+{% endblock %}
