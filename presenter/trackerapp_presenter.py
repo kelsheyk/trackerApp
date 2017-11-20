@@ -398,7 +398,7 @@ app = webapp2.WSGIApplication([
     ),
     RESTHandler(
         '/rest/alerts', 
-        Group, 
+        LocationAlert, 
         permissions={
             'GET': PERMISSION_ANYONE,
             'POST': PERMISSION_ANYONE,
