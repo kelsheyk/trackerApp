@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_number": "671966008147",
+    "project_id": "trackerapp-185915"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671966008147:android:4a772c99669cdb92",
+        "android_client_info": {
+          "package_name": "com.example.android_tracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671966008147-0gdg9o59phea652b9e5dobm6j8kvgg1t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android_tracker",
+            "certificate_hash": "1bfb31eda5bce23a5a0b9fc8a1aa8151f05cc347"
+          }
+        },
+        {
+          "client_id": "671966008147-53p8t1377jrr3tcv4n7p08o45udgipnc.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "671966008147-bcs7oqtlgnv35578kmsb51t670gicvt8.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "671966008147-6q9mg8528gptaeru2cileu54n0e0iuc5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGVD48qE8J1IgFIzssZPf0loGwmc4IT7g"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

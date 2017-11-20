@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.android_tracker.MyListActivity"
+    android:orientation="vertical" >
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_weight="50"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="50"
+        android:orientation="vertical"
+        android:weightSum="1">
+
+        <Switch
+            android:id="@+id/alert_switch"
+            android:layout_width="107dp"
+            android:layout_height="wrap_content"
+            android:text="Alert"
+            android:layout_gravity="center"
+            android:layout_weight="0.25"
+            android:layout_margin="10dp"/>
+
+        <Button
+            android:id="@+id/edit_button"
+            android:layout_width="152dp"
+            android:layout_height="wrap_content"
+            android:text="Edit"
+            android:layout_gravity="center"
+            android:layout_weight="0.10"
+            android:layout_margin="10dp"/>
+
+        <Button
+            android:id="@+id/mylist_button"
+            android:layout_width="182dp"
+            android:layout_height="wrap_content"
+            android:text="My List"
+            android:layout_gravity="center"
+            android:layout_weight="0.11"
+            android:layout_margin="10dp"/>
+
+    </LinearLayout>
+</LinearLayout>
