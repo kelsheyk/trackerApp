@@ -61,11 +61,6 @@ public class LoginActivity extends AppCompatActivity implements
         findViewById(R.id.button_sign_out).setOnClickListener(this);
         findViewById(R.id.my_list_button).setOnClickListener(this);
 
-//        // [START configure_signin]
-//        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//                .requestEmail()
-//                .build();
-
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -76,14 +71,6 @@ public class LoginActivity extends AppCompatActivity implements
 
         // [START initialize_auth]
         mAuth = FirebaseAuth.getInstance();
-
-        // [END initialize_auth]
-
-//        // [START build_client]
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .enableAutoManage(this, this)
-//                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-//                .build();
     }
 
     @Override
@@ -116,24 +103,6 @@ public class LoginActivity extends AppCompatActivity implements
                 updateUI(null);
             }
         }
-
-//        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-//        if (requestCode == RC_SIGN_IN)
-//        {
-//            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-//            handleSignInResult(result);
-//            if(result.isSuccess())
-//            {
-//                Intent intent = new Intent(context, MyListActivity.class);
-//               // setNewActivityIntent(intent);
-//                startActivity(intent);
-//            }
-//        }
-//        else if (requestCode == RC_SIGN_OUT)
-//        {
-//            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-//            handleSignInResult(result);
-//        }
     }
 
     // [START auth_with_google]
@@ -206,13 +175,14 @@ public class LoginActivity extends AppCompatActivity implements
         if(user != null)
         {
             findViewById(R.id.button_sign_in).setVisibility(View.GONE);
-            findViewById(R.id.my_list_button).setVisibility(View.VISIBLE);
             findViewById(R.id.button_sign_out).setVisibility(View.VISIBLE);
+            findViewById(R.id.my_list_button).setVisibility(View.VISIBLE);
         }
         else
         {
             findViewById(R.id.button_sign_in).setVisibility(View.VISIBLE);
             findViewById(R.id.button_sign_out).setVisibility(View.GONE);
+            findViewById(R.id.my_list_button).setVisibility(View.GONE);
         }
     }
 
@@ -227,7 +197,8 @@ public class LoginActivity extends AppCompatActivity implements
         intent.putExtra("userEmail", acct.getEmail());
         intent.putExtra("userId", acct.getId());
         intent.putExtra("userToken", acct.getIdToken());
-        Log.i(TAG, intent.getExtras().toString());
+//        Log.i(TAG, ".....................");
+//        Log.i(TAG, intent.getStringExtra("userToken"));
     }
 
     @Override

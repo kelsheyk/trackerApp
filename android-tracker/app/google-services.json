@@ -1,7 +1,9 @@
 {
   "project_info": {
     "project_number": "671966008147",
-    "project_id": "trackerapp-185915"
+    "firebase_url": "https://trackerapp-185915.firebaseio.com",
+    "project_id": "trackerapp-185915",
+    "storage_bucket": "trackerapp-185915.appspot.com"
   },
   "client": [
     {
@@ -12,6 +14,26 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "671966008147-ovb2issuo7jhke8sm6n3ocset3qt5273.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android_tracker",
+            "certificate_hash": "72eb700f18f7c660df4dec8bb496a1205042c701"
+          }
+        },
+        {
+          "client_id": "671966008147-dnbd1cg8r75avggj513b62tp2svo90dg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android_tracker",
+            "certificate_hash": "e4bd097683bfaf71b12da3f3a2a51b6b231421f7"
+          }
+        },
+        {
+          "client_id": "671966008147-5ai21s9elm6bml9rsmkmbvvrdr4i3l16.apps.googleusercontent.com",
+          "client_type": 3
+        },
         {
           "client_id": "671966008147-0gdg9o59phea652b9e5dobm6j8kvgg1t.apps.googleusercontent.com",
           "client_type": 1,
@@ -43,11 +65,16 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671966008147-5ai21s9elm6bml9rsmkmbvvrdr4i3l16.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
-          "status": 1
+          "status": 2
         }
       }
     }
