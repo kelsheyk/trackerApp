@@ -13,13 +13,13 @@
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="717dp"
         android:layout_weight="50" />
 
     <TextView
         android:id="@+id/textView2"
         android:layout_width="match_parent"
-        android:layout_height="35dp"
+        android:layout_height="wrap_content"
         android:text="Tracking"
         android:textAlignment="center"
         android:textAllCaps="false"
@@ -29,7 +29,7 @@
     <android.support.design.widget.TabLayout
         android:id="@+id/tabs"
         android:layout_width="match_parent"
-        android:layout_height="101dp">
+        android:layout_height="38dp">
 
         <android.support.design.widget.TabItem
             android:layout_width="wrap_content"
@@ -47,9 +47,27 @@
             android:text="Others" />
     </android.support.design.widget.TabLayout>
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="50"
+        android:background="@android:color/transparent">
+
+        <LinearLayout
+            android:id="@+id/Trackees_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="50"
+            android:orientation="vertical"
+            android:scrollIndicators="right"
+            android:scrollY="?attr/listPreferredItemPaddingLeft"
+            android:visibility="visible"></LinearLayout>
+
+    </ScrollView>
+
     <Button
         android:id="@+id/manage_button"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="Manage" />

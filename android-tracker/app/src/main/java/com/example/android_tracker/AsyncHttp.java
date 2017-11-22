@@ -12,6 +12,8 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
+import java.util.ArrayList;
+
 /**
  * Created by carmina on 11/17/17.
  */
@@ -27,11 +29,12 @@ public class AsyncHttp extends AppCompatActivity{
     private boolean userIsSignedIn;
     private int trackingIndex = 0;
 
-    public AsyncHttp(Context context, View view, Intent userDataIntent) {
+    public AsyncHttp(Context context, View view, Intent userDataIntent)
+    {
         this.context = context;
-        this.viewToModify = view;
-        this.userDataIntent = userDataIntent;
-        this.userIsSignedIn = (userDataIntent.getStringExtra("userId") != null);
+//        this.viewToModify = view;
+//        this.userDataIntent = userDataIntent;
+        // this.userIsSignedIn = (userDataIntent.getStringExtra("userId") != null);
         this.client = new AsyncHttpClient();
     }
 
@@ -80,4 +83,18 @@ public class AsyncHttp extends AppCompatActivity{
         }
     }
 
+    public ArrayList<String> getFamilyList()
+    {
+        return null;
+    }
+
+    public ArrayList<String> getFriendList()
+    {
+        return null;
+    }
+
+    public ArrayList<String> getOthersList()
+    {
+        return null;
+    }
 }

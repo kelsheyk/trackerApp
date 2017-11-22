@@ -82,7 +82,8 @@ public class LoginActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onResume() {
+    protected void onResume()
+    {
         super.onResume();
     }
 
@@ -197,7 +198,6 @@ public class LoginActivity extends AppCompatActivity implements
         intent.putExtra("userEmail", acct.getEmail());
         intent.putExtra("userId", acct.getId());
         intent.putExtra("userToken", acct.getIdToken());
-//        Log.i(TAG, ".....................");
 //        Log.i(TAG, intent.getStringExtra("userToken"));
     }
 

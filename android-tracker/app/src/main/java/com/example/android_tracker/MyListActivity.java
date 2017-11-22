@@ -12,9 +12,11 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -30,13 +32,23 @@ import com.google.android.gms.maps.model.*;
 import android.app.Activity;
 import android.os.Bundle;
 
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
+
 public class MyListActivity extends FragmentActivity implements OnMapReadyCallback, View.OnClickListener
 {
+    private static ArrayList<String> familyList;
+    private static ArrayList<String> friendList;
+    private static ArrayList<String> othersList;
+
     private static final int REQUEST_FINE_LOCATION = 9003;
     private static final int REQUEST_COARSE_LOCATION = 9004;
     private GoogleMap mMap;
     private Intent userDataIntent;
     Context context = this;
+    Timer timer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,29 +78,79 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
                 onTabTapped(tab.getPosition());
             }
         });
-
-
     }
 
-    public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions,
-                                           int[] grantResults) {
-        if (requestCode == REQUEST_FINE_LOCATION) {
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        if(timer != null)
+        {
+            timer.cancel();
+        }
+
+        timer = new Timer();
+        final AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
+        final TabLayout mTabLayout = findViewById(R.id.tabs);
+
+        timer.scheduleAtFixedRate(new TimerTask() {
+            synchronized public void run()
+            {
+                // Request trackees information every 15 seconds
+                // TODO: Request the selected group/tab data
+                // Need to pull the user's: name, email, phone, lat, lon
+                Log.i("---->", "Resume Event");
+                familyList = handler.getFamilyList();
+                friendList = handler.getFriendList();
+                othersList = handler.getOthersList();
+
+
+                if(mTabLayout.getSelectedTabPosition() == 0)
+                {
+                    updateGroupLayout("Fam-");
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 1)
+                {
+                    updateGroupLayout("Fri-");
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 2)
+                {
+                    updateGroupLayout("Oth-");
+                }
+            }
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(2));
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        if(timer != null)
+        {
+            Log.i("---->", "Cancel Event");
+            timer.cancel();
+        }
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        if (requestCode == REQUEST_FINE_LOCATION)
+        {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
-                updateMap();
+                //updateGroupLayout("Fam");
             }
             else
             {
                 // Permission was denied or request was cancelled
             }
         }
-        else if (requestCode == REQUEST_COARSE_LOCATION) {
+        else if (requestCode == REQUEST_COARSE_LOCATION)
+        {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
-//                updateMap();
-                // We can now safely use the API we requested access to
-                // Location myLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                //updateGroupLayout("Fam");
             }
             else
             {
@@ -110,45 +172,55 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
     public void onMapReady(GoogleMap googleMap)
     {
         mMap = googleMap;
-
-        // Add a marker in Sydney and move the camera
-
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             // Check Permissions Now
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_FINE_LOCATION);
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
-                    REQUEST_FINE_LOCATION);
+                    REQUEST_COARSE_LOCATION);
             Log.i("---->", "Returns");
         }
-        else
-        {
-            updateMap();
-        }
+//        else
+//        {
+//            updateGroupLayout("Fam");
+//        }
     }
 
     @SuppressLint("MissingPermission")
-    void updateMap()
+    void updateGroupLayout(final String str)
     {
-        LatLng sydney = new LatLng(-33.867, 151.206);
-        mMap.setMyLocationEnabled(true);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
+        final GoogleMap map = mMap;
+        if(map == null)
+        {
+            return;
+        }
 
-        mMap.addMarker(new MarkerOptions()
-                .title("Sydney")
-                .snippet("The most populous city in Australia.")
-                .position(sydney));
+        try
+        {
+            map.clear();
+            int rows = 16;
+            MarkerOptions markers = new MarkerOptions();
+
+            LinearLayout layout = (LinearLayout) findViewById(R.id.Trackees_layout);
+            layout.removeAllViews();
+
+            for(int i = 0; i < rows; i++)
+            {
+                String name = str + " " + i;
+                LatLng sydney = new LatLng(-33.867+i*.005, 151.206-i*.005);
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
+                map.addMarker(new MarkerOptions().title(name).snippet("In Australia.").position(sydney));
+                layout.addView(new TrackeeButton(context, userDataIntent, name));
+            }
+        }
+        catch (Exception e)
+        {
+            Log.w("---->", "Error", e);
+        }
     }
 
     @Override
@@ -157,23 +229,29 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
         AsyncHttp navigator = new AsyncHttp(context, findViewById(R.id.tabs), userDataIntent);
     }
 
-    public void onTabTapped(int position) {
+    public void onTabTapped(int position)
+    {
+        Log.i("---->", "Position " + position);
         switch (position) {
             case 0:
                 Toast.makeText(this, "Family tab", Toast.LENGTH_SHORT).show();
-
+                // TODO: Update family on map
+//                updateGroupLayout("Fam");
                 break;
             case 1:
                 Toast.makeText(this, "Friends", Toast.LENGTH_SHORT).show();
+                // TODO: Update friends on map
+//                updateGroupLayout("Fri");
                 break;
             case 2:
                 Toast.makeText(this, "others tab clicked " + position, Toast.LENGTH_SHORT);
+                // TODO: Update others on map
+//                updateGroupLayout("Oth");
                 break;
             default:
                 Toast.makeText(this, "Tapped " + position, Toast.LENGTH_SHORT);
         }
     }
-
 
     @Override
     public void onClick(View view) {
