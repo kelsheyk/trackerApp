@@ -85,16 +85,39 @@ public class AsyncHttp extends AppCompatActivity{
 
     public ArrayList<String> getFamilyList()
     {
-        return null;
+        ArrayList<String> ls = new ArrayList<String>();
+        ls.add("1--ab1");
+        ls.add("1--ab2");
+        ls.add("1--ab3");
+        ls.add("1--ab4");
+        ls.add("1--ab5");
+        return ls;
     }
 
     public ArrayList<String> getFriendList()
     {
-        return null;
+        ArrayList<String> ls = new ArrayList<String>();
+        ls.add("2--ab1");
+        ls.add("2--ab2");
+        ls.add("2--ab3");
+        ls.add("2--ab4");
+        ls.add("2--ab5");
+        return ls;
     }
 
     public ArrayList<String> getOthersList()
     {
-        return null;
+        ArrayList<String> ls = new ArrayList<String>();
+        ls.add("3--ab1");
+        ls.add("3--ab2");
+        ls.add("3--ab3");
+        ls.add("3--ab4");
+        ls.add("3--ab5");
+        return ls;
+    }
+
+    public String getTrackedUserData()
+    {
+        return "someone";
     }
 }

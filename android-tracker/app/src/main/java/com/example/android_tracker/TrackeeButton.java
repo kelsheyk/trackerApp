@@ -17,28 +17,28 @@ public class TrackeeButton extends android.support.v7.widget.AppCompatButton // 
 {
     String name;
     Context context;
-    Intent singleViewIntent;
+    Intent singleTrackIntent;
 
 
     public TrackeeButton(final Context con, Intent intent, String name)
     {
         super(con);
         this.context = con;
-        singleViewIntent = intent;
+        singleTrackIntent = intent;
 
         this.setText(name);
-//        this.setTextColor(Color.BLACK);
-//        this.setBackgroundColor(Color.GRAY);
         this.setTextSize(16);
         this.setClickable(true);
         this.setLayoutParams(new LinearLayout.LayoutParams( LinearLayout.LayoutParams.MATCH_PARENT,
                                                             LinearLayout.LayoutParams.WRAP_CONTENT, 2.0f));
 
-        this.setOnClickListener(new OnClickListener() {
+        this.setOnClickListener(new OnClickListener()
+        {
             @Override
             public void onClick(View view)
             {
-                // context.startActivity(singleViewIntent);
+                singleTrackIntent.setClass(context, SingleTrackActivity.class);
+                context.startActivity(singleTrackIntent);
             }
         });
     }
