@@ -1,11 +1,9 @@
 package com.example.android_tracker;
 
 import android.annotation.SuppressLint;
-import android.app.TabActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -13,24 +11,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.TabHost;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 
 import com.google.android.gms.maps.*;
-import com.google.android.gms.maps.model.*;
-
-import android.app.Activity;
-import android.os.Bundle;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -54,10 +44,6 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_list);
-
-        // Obtain the MapFragment and get notified when the map is ready to be used.
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
 
         userDataIntent = getIntent();
         findViewById(R.id.manage_button).setOnClickListener(this);
@@ -89,6 +75,10 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
         {
             timer.cancel();
         }
+        
+        // Obtain the MapFragment and get notified when the map is ready to be used.
+        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         if(mMap != null)
         {
@@ -106,24 +96,28 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
                 // Request trackees information every 15 seconds
                 // TODO: Request the selected group/tab data
                 // Need to pull the user's: name, email, phone, lat, lon
-                Log.i("---->", "Resume Event");
+                if(map == null)
+                    Log.i("---->", "Resume Event Null");
+                else
+                    Log.i("---->", "Resume Event");
+
                 familyList = handler.getFamilyList();
                 friendList = handler.getFriendList();
                 othersList = handler.getOthersList();
 
 
-//                if(mTabLayout.getSelectedTabPosition() == 0)
-//                {
-//                    updateGroupLayout("Fam-");
-//                }
-//                else if(mTabLayout.getSelectedTabPosition() == 1)
-//                {
-//                    updateGroupLayout("Fri-");
-//                }
-//                else if(mTabLayout.getSelectedTabPosition() == 2)
-//                {
-//                    updateGroupLayout("Oth-");
-//                }
+                if(mTabLayout.getSelectedTabPosition() == 0)
+                {
+                    updateGroupLayout(map, "Fam-");
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 1)
+                {
+                    updateGroupLayout(map, "Fri-");
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 2)
+                {
+                    updateGroupLayout(map, "Oth-");
+                }
             }
         }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(2));
     }
@@ -145,7 +139,7 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
         {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
-                updateGroupLayout("Fam");
+                // updateGroupLayout("Fam");
             }
             else
             {
@@ -156,7 +150,7 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
         {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
-                updateGroupLayout("Fam");
+                // updateGroupLayout("Fam");
             }
             else
             {
@@ -183,25 +177,23 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
         {
             // Check Permissions Now
             ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                 android.Manifest.permission.ACCESS_COARSE_LOCATION},
                     REQUEST_FINE_LOCATION);
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
-                    REQUEST_COARSE_LOCATION);
             Log.i("---->", "Returns");
         }
         else
         {
-            updateGroupLayout("Fam");
+            // updateGroupLayout("Fam");
         }
     }
 
     @SuppressLint("MissingPermission")
-    void updateGroupLayout(final String str)
+    void updateGroupLayout(GoogleMap map, final String str)
     {
-        final GoogleMap map = mMap;
         if(map == null)
         {
+            Log.i("---->", "Map Null");
             return;
         }
 
