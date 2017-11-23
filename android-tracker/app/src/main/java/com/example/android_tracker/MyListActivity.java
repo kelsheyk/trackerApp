@@ -90,11 +90,17 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
             timer.cancel();
         }
 
+        if(mMap != null)
+        {
+            Log.i("---->", "Not null");
+        }
+
         timer = new Timer();
         final AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
         final TabLayout mTabLayout = findViewById(R.id.tabs);
 
         timer.scheduleAtFixedRate(new TimerTask() {
+            final GoogleMap map = mMap;
             synchronized public void run()
             {
                 // Request trackees information every 15 seconds
@@ -106,18 +112,18 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
                 othersList = handler.getOthersList();
 
 
-                if(mTabLayout.getSelectedTabPosition() == 0)
-                {
-                    updateGroupLayout("Fam-");
-                }
-                else if(mTabLayout.getSelectedTabPosition() == 1)
-                {
-                    updateGroupLayout("Fri-");
-                }
-                else if(mTabLayout.getSelectedTabPosition() == 2)
-                {
-                    updateGroupLayout("Oth-");
-                }
+//                if(mTabLayout.getSelectedTabPosition() == 0)
+//                {
+//                    updateGroupLayout("Fam-");
+//                }
+//                else if(mTabLayout.getSelectedTabPosition() == 1)
+//                {
+//                    updateGroupLayout("Fri-");
+//                }
+//                else if(mTabLayout.getSelectedTabPosition() == 2)
+//                {
+//                    updateGroupLayout("Oth-");
+//                }
             }
         }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(2));
     }
@@ -139,7 +145,7 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
         {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
-                //updateGroupLayout("Fam");
+                updateGroupLayout("Fam");
             }
             else
             {
@@ -150,7 +156,7 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
         {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
-                //updateGroupLayout("Fam");
+                updateGroupLayout("Fam");
             }
             else
             {
@@ -184,10 +190,10 @@ public class MyListActivity extends FragmentActivity implements OnMapReadyCallba
                     REQUEST_COARSE_LOCATION);
             Log.i("---->", "Returns");
         }
-//        else
-//        {
-//            updateGroupLayout("Fam");
-//        }
+        else
+        {
+            updateGroupLayout("Fam");
+        }
     }
 
     @SuppressLint("MissingPermission")
