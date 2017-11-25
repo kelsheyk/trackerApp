@@ -6,6 +6,17 @@
     function createAlert() {
         window.location.replace('/alert_create')
     }
+
+    function toggleStatus(alertKey) {
+        console.log(alertKey);
+        $.ajax({
+            url : "/toggle_alert/"+ alertKey,
+            type: "POST",
+            error: function(e){
+                console.log(e);
+            },
+        });
+    }
 </script>
 {% endblock %}
 
@@ -14,9 +25,23 @@
         <fieldset class="form-group row">
             <legend class="col-form-legend col-sm-2">Alerts</legend>
             {% for alert in alerts %}
-                <span>
-                    {{ alert.alert_name }} 
-                    <a href="/edit_alert/{{ alert.key.urlsafe() }}">
+                <span class="row">
+                    <p class="col-1">
+                        <label class="switch">
+                            <input
+                                type="checkbox"
+                                {% if alert.alert_status %}
+                                    checked
+                                {% endif %}
+                                onchange="toggleStatus('{{alert.key.urlsafe()}}')"
+                            >
+                            <span class="slider round"></span>
+                        </label>
+                    </p>
+                    <p class="col-10">
+                        {{ alert.alert_name }}
+                    </p>
+                    <a class="col-1" href="/alert_edit/{{ alert.key.urlsafe() }}">
                         Edit
                     </a>
                 </span>
@@ -24,3 +49,4 @@
         </fieldset>
     <button  onclick="createAlert()">Create Alert</button>
 {% endblock %}
+

@@ -1,17 +1,27 @@
+
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link  rel="stylesheet" href="bootstrap/css/bootstrap-combined.min.css" rel="stylesheet" type="text/css" />
+<link  rel="stylesheet" href="/bootstrap/css/bootstrap-combined.min.css" rel="stylesheet" type="text/css" />
 
 
-<script type="text/javascript" src="bootstrap/js/bootstrap-multiselect.js"></script>
-<link rel="stylesheet" href="bootstrap/css/bootstrap-multiselect.css" type="text/css"/>
+<script type="text/javascript" src="/bootstrap/js/bootstrap-multiselect.js"></script>
+<link rel="stylesheet" href="/bootstrap/css/bootstrap-multiselect.css" type="text/css"/>
 
 <link type="text/css" rel="stylesheet" href="/bootstrap/css/geoview.css">
 <script type="text/javascript">
 var map = null;
 var drawingManager = null;
 var myCircle = null;
+var centerLat;
+var centerLon;
+var radius;
+if ("{{edit}}" == "True") {
+    centerLat = {{alert.alert_location_center.lat}};
+    centerLon = {{alert.alert_location_center.lon}};
+    radius = {{alert.alert_location_radius}};
+}
+
 function initialize() {
     var mapOptions = {
         zoom: 12,
@@ -27,7 +37,6 @@ function initialize() {
             position: google.maps.ControlPosition.TOP_CENTER,
             drawingModes: ['circle']
         },
-        markerOptions: {icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png'},
         circleOptions: {
             fillColor: 'lightblue',
             fillOpacity: 0.5,
@@ -41,32 +50,117 @@ function initialize() {
     google.maps.event.addListener(drawingManager, 'circlecomplete', onCircleComplete);
 }
 
+function initializeWithData() {
+    var mapOptions = {
+        zoom: 12,
+        center: new google.maps.LatLng(30.2, -97.7),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    map = new google.maps.Map(document.getElementById('map_form'),mapOptions);
+    myCircle = new google.maps.Circle(document.getElementById('map_canvas'),mapOptions);
+    drawingManager = new google.maps.drawing.DrawingManager({
+        drawingControl: true,
+        drawingControlOptions: {
+            position: google.maps.ControlPosition.TOP_CENTER,
+            drawingModes: []
+        },
+    });
+    drawingManager.setMap(map);
+    myCircle = new google.maps.Circle({
+      center: new google.maps.LatLng(centerLat,centerLon),
+      radius: radius,
+      fillColor: 'lightblue',
+      fillOpacity: 0.5,
+      strokeWeight: 2,
+      clickable: false,
+      editable: true,
+      zIndex: 1,
+      map: map
+    });
+    google.maps.event.addListener(myCircle, 'radius_changed', function(){
+        radius = this.getRadius();
+        center = this.getCenter();
+        centerLat = this.getCenter().lat();
+        cnterLon = this.getCenter().lng();
+    });
+    google.maps.event.addListener(myCircle, 'center_changed',  function(){
+        radius = this.getRadius();
+        center = this.getCenter();
+        centerLat = this.getCenter().lat();
+        centerLon = this.getCenter().lng();
+    });
+}
+
+
 
 function onCircleComplete(circle) {
         myCircle = circle;
         google.maps.event.addListener(myCircle, 'radius_changed', function(){
-            var radius = this.getRadius();
+            radius = this.getRadius();
             center = this.getCenter();
-            var lat = this.getCenter().lat();
-            var lon = this.getCenter().lng();
-            console.log(lat + " " + lon + " " + radius);    
+            centerLat = this.getCenter().lat();
+            cnterLon = this.getCenter().lng();
         });
         google.maps.event.addListener(myCircle, 'center_changed',  function(){
-            var radius = this.getRadius();
+            radius = this.getRadius();
             center = this.getCenter();
-            var lat = this.getCenter().lat();
-            var lon = this.getCenter().lng();
-            console.log(lat + " " + lon + " " + radius);    
+            centerLat = this.getCenter().lat();
+            centerLon = this.getCenter().lng();
         });
 
-        var radius = circle.getRadius();
+        radius = circle.getRadius();
         center = circle.getCenter();
-        var lat = circle.getCenter().lat();
-        var lon = circle.getCenter().lng();
-        console.log(lat + " " + lon + " " + radius);
+        centerLat = circle.getCenter().lat();
+        centerLon = circle.getCenter().lng();
         drawingManager.setMap(null);
 }
 
+function createAlert() {
+    startDateVal = $('input[name="alert_time_start"]').val();
+    var startDate = startDateVal;
+    if (startDateVal.length < 8) {
+        startDate = startDateVal+":00";
+    }
+    endDateVal = $('input[name="alert_time_end"]').val();
+    var endDate = endDateVal;
+    if (endDateVal.length < 8) {
+        endDate = endDateVal+":00";
+    }
+    data = {
+        alert_name : $('input[name="alert_name"]').val(),
+        alert_tracked_people : $('#alert_tracked_people').val(),
+        alert_location_center : centerLat + ", " + centerLon, 
+        alert_location_radius : radius,
+        alert_day_sun : $('input[name="alert_day_sun"]').is(":checked"),
+        alert_day_mon : $('input[name="alert_day_mon"]').is(":checked"),
+        alert_day_tue : $('input[name="alert_day_tue"]').is(":checked"),
+        alert_day_wed : $('input[name="alert_day_wed"]').is(":checked"),
+        alert_day_thu : $('input[name="alert_day_thu"]').is(":checked"),
+        alert_day_fri : $('input[name="alert_day_fri"]').is(":checked"),
+        alert_day_sat : $('input[name="alert_day_sat"]').is(":checked"),
+        alert_time_start : startDate,
+        alert_time_end : endDate,
+        alert_owner: $('input[name="alert_owner"]').val(),
+    }
+    console.log(data);
+    var url = "/rest/alerts";
+    var type = "POST";
+    if ("{{edit}}" == "True") {
+        url = "/rest/alerts/{{ alert.key.urlsafe() }}";
+        type = "PUT"
+    }
+    $.ajax({
+        url : url,
+        type: type,
+        data : JSON.stringify(data),
+        error: function(e){
+            console.log(e);
+        },
+        success: function(msg){ 
+            window.location.replace('/home')
+        }
+    });
+}
 </script>
 
 {% endblock %}
@@ -80,7 +174,14 @@ function onCircleComplete(circle) {
                         <label>Nickname</label>
                     </div>
                     <div class="col-10">
-                        <input name="alert_name" type="text" required class="form-control"  />
+                        <input 
+                            name="alert_name"
+                            type="text"
+                            required class="form-control"
+                            {% if edit %}
+                                value="{{alert.alert_name}}"
+                            {% endif %}
+                        />
                     </div>
                 </div>
                 <div class="form-group row">
@@ -88,9 +189,20 @@ function onCircleComplete(circle) {
                         <label>Users</label>
                     </div>
                     <div class="col-10">
-                        <select name="alert_tracked_people" id="alert_tracked_people" multiple="multiple">
+                        <select
+                            name="alert_tracked_people"
+                            id="alert_tracked_people"
+                            multiple="multiple"
+                        >
                             {% for u in all_users %}
-                                <option value={{ u.key.urlsafe() }}>{{ u.email }}</option>
+                                <option
+                                    value={{ u.user_id }}
+                                    {% if edit and u.user_id in alert.alert_tracked_people %}
+                                        selected="selected"
+                                    {% endif %}
+                                >
+                                    {{ u.email }}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -102,34 +214,84 @@ function onCircleComplete(circle) {
                     <div class="col-10">
                         <div class="row">
                             <div class="col-1" align="left">
-                              <input type="checkbox" id="alert_day_sun" name="alert_day_sun" value="alert_day_sun">
+                              <input
+                                type="checkbox"
+                                id="alert_day_sun"
+                                name="alert_day_sun"
+                                {% if edit and alert.alert_day_sun %}
+                                    checked    
+                                {% endif %}
+                              >
                               <label for="alert_day_sun">Sun</label>
                             </div>
                             <div class="col-1" align="left">
-                              <input type="checkbox" id="alert_day_mon" name="alert_day_mon" value="alert_day_monn">
+                              <input
+                                type="checkbox"
+                                id="alert_day_mon"
+                                name="alert_day_mon"
+                                {% if edit and alert.alert_day_mon %}
+                                    checked    
+                                {% endif %}
+                              >
                               <label for="alert_day_mon">Mon</label>
                             </div>
                             <div class="col-1" align="left">
-                              <input type="checkbox" id="alert_day_tue" name="alert_day_tue" value="alert_day_tue">
+                              <input
+                                type="checkbox"
+                                id="alert_day_tue"
+                                name="alert_day_tue"
+                                {% if edit and alert.alert_day_tue %}
+                                    checked    
+                                {% endif %}
+                              >
                               <label for="alert_day_tue">Tue</label>
                             </div>
                             <div class="col-1" align="left">
-                              <input type="checkbox" id="alert_day_wed" name="alert_day_wed" value="alert_day_wed">
+                              <input
+                                type="checkbox"
+                                id="alert_day_wed"
+                                name="alert_day_wed"
+                                {% if edit and alert.alert_day_wed %}
+                                    checked    
+                                {% endif %}
+                              >
                               <label for="alert_day_wed">Wed</label>
                             </div>
                             <div class="col-1" align="left">
-                              <input type="checkbox" id="alert_day_thu" name="alert_day_thu" value="alert_day_thu">
+                              <input
+                                type="checkbox"
+                                id="alert_day_thu"
+                                name="alert_day_thu"
+                                {% if edit and alert.alert_day_thu %}
+                                    checked    
+                                {% endif %}
+                              >
                               <label for="alert_day_thu">Thu</label>
                             </div>
                             <div class="col-1" align="left">
-                              <input type="checkbox" id="alert_day_fri" name="alert_day_fri" value="alert_day_fri">
+                              <input
+                                type="checkbox"
+                                id="alert_day_fri"
+                                name="alert_day_fri"
+                                {% if edit and alert.alert_day_fri %}
+                                    checked    
+                                {% endif %}
+                              >
                               <label for="alert_day_fri">Fri</label>
                             </div>
                             <div class="col-1" align="left">
-                              <input type="checkbox" id="alert_day_sat" name="alert_day_sat" value="alert_day_sat">
+                              <input
+                                type="checkbox"
+                                id="alert_day_sat"
+                                name="alert_day_sat"
+                                {% if edit and alert.alert_day_sat %}
+                                    checked    
+                                {% endif %}
+                              >
                               <label for="alert_day_sat">Sat</label>
                             </div>
                         </div>
+                        <input name='alert_owner' value="{{ current_user.user_id() }}" style="display:none">
                     </div>
                 </div>
                 <div class="form-group row">
@@ -137,7 +299,14 @@ function onCircleComplete(circle) {
                         <label>Start Time</label>
                     </div>
                     <div class="col-10">
-                        <input name="alert_time_start" type="time" required class="form-control"  />
+                        <input
+                            name="alert_time_start"
+                            type="time"
+                            required class="form-control"
+                            {% if edit %}
+                                value={{alert.alert_time_start}}
+                            {% endif %}
+                        />
                     </div>
                 </div>
                 <div class="form-group row">
@@ -145,7 +314,14 @@ function onCircleComplete(circle) {
                         <label>End Time</label>
                     </div>
                     <div class="col-10">
-                        <input name="alert_time_end" type="time" required class="form-control"  />
+                        <input
+                            name="alert_time_end"
+                            type="time"
+                            required class="form-control"
+                            {% if edit %}
+                                value={{alert.alert_time_end}}
+                            {% endif %}
+                        />
                     </div>
                 </div>
             </div>
@@ -156,7 +332,7 @@ function onCircleComplete(circle) {
             </div>
             <div class="col-12">
                 <center>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" onclick="createAlert()" class="btn btn-primary">
                         Submit 
                     </button>
                 </center>
@@ -169,10 +345,16 @@ function onCircleComplete(circle) {
 <script type="text/javascript">
     $(document).ready(function() {
         $('#alert_tracked_people').multiselect();
+        $('.multiselect-container li a').on("click", function () {
+            $('#alert_tracked_people').val($(this).children().children().value());
+        });
     });
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3-5HO3QVtS9GkIAglmwONnPlPf5Ea-gU&libraries=drawing&callback=initialize"
+{% if edit %}
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3-5HO3QVtS9GkIAglmwONnPlPf5Ea-gU&libraries=drawing&callback=initializeWithData"
   type="text/javascript"></script>
-
+{% else %}
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3-5HO3QVtS9GkIAglmwONnPlPf5Ea-gU&libraries=drawing&callback=initialize"
+  type="text/javascript"></script>
+{% endif %}
 {% endblock %}
-

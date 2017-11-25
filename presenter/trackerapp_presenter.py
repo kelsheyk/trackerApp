@@ -315,11 +315,20 @@ class AlertCreate(webapp2.RequestHandler):
        
         all_users = Person.query().fetch()
 
+        blank_alert = LocationAlert(
+            alert_name = "",
+            alert_tracked_people = [],
+            alert_location_center = ndb.GeoPt(0,0), 
+            alert_location_radius= 0,
+        )
+
         template_values = {
             'navigation': NAV_LINKS,
             'page_header': "TrackerApp",
             'current_user': current_user,
             'person_obj': person_obj,
+            'edit': False,
+            'alert': blank_alert,
             'all_users': all_users,
             'auth_url': auth_url,
             'url_link_text': url_link_text,
@@ -327,6 +336,47 @@ class AlertCreate(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('alert_form_page.html')
         self.response.write(template.render(template_values))
 # [END AlertCreate]
+
+# [START AlertEdit]
+class AlertEdit(webapp2.RequestHandler):
+
+    def get(self, alert_key_str):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+        if current_user is None:
+            self.redirect("/auth")
+            return
+        person_obj = Person.get_by_user(current_user)
+       
+        alert_key = ndb.Key(urlsafe=alert_key_str)
+        alert_obj = alert_key.get()
+
+        all_users = Person.query().fetch()
+
+        template_values = {
+            'navigation': NAV_LINKS,
+            'page_header': "TrackerApp",
+            'current_user': current_user,
+            'edit': True,
+            'alert': alert_obj,
+            'person_obj': person_obj,
+            'all_users': all_users,
+            'auth_url': auth_url,
+            'url_link_text': url_link_text,
+        }
+        template = JINJA_ENVIRONMENT.get_template('alert_form_page.html')
+        self.response.write(template.render(template_values))
+# [END AlertEdit]
+
+# [START ToggleAlert]
+class ToggleAlert(webapp2.RequestHandler):
+    def post(self, alert_key_str):
+        alert_key = ndb.Key(urlsafe=alert_key_str)
+        alert_obj = alert_key.get()
+        alert_obj.alert_status = not(alert_obj.alert_status)
+        alert_obj.put()
+        self.response.out.write(json.dumps({"success":True}))
+
+# [END ToggleAlert]
 
 config = {}
 config['webapp2_extras.sessions'] = {
@@ -344,7 +394,9 @@ app = webapp2.WSGIApplication([
     ('/groups/(.+)',GroupsPage),
     ('/get_tracked', GetTracked),
     ('/alerts',AlertsPage),
+    ('/toggle_alert/(.+)', ToggleAlert),
     ('/alert_create', AlertCreate),
+    ('/alert_edit/(.+)', AlertEdit),
 
     # REST interface (Person example, use any Model)
     # GET all people: /rest/people    returns list of all Person objects in "results" key
@@ -402,8 +454,8 @@ app = webapp2.WSGIApplication([
         permissions={
             'GET': PERMISSION_ANYONE,
             'POST': PERMISSION_ANYONE,
-            'PUT': PERMISSION_OWNER_USER,
-            'DELETE': PERMISSION_OWNER_USER
+            'PUT': PERMISSION_ANYONE,
+            'DELETE': PERMISSION_ANYONE
         },
         # Will be called for every PUT, right before the model is saved (also supports GET/POST/DELETE)
         #put_callback=lambda model, data: model
