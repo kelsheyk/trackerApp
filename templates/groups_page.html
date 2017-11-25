@@ -1,61 +1,16 @@
 {% extends "base.html" %}
 
-{% block extra_head %}
-<link type="text/css" rel="stylesheet" href="/bootstrap/css/groupPopup.css">
-<script type="text/javascript">
-    function addGroup() {
-        var popup = document.getElementById("addPopup");
-        popup.classList.toggle("show");
-    }
-    function delGroup(groupKey) {
-        console.log(groupKey);
-        $.ajax({
-            url : "/rest/groups/"+groupKey,
-            type: "DELETE",
-            error: function(e){
-                console.log(e);
-            },
-            success: function(msg){ 
-                window.location.replace('/home')
-            }
-        });
-    }
-    function postGroup() {
-        var group_name = $('input[name="group_name"]').val();
-        var group_owner = $('input[name="group_owner"]').val();
-        console.log(group_owner);
-        $.ajax({
-            url : "/rest/groups",
-            type: "POST",
-            data : JSON.stringify( 
-                { 
-                    "group_name": group_name,
-                    "group_members": [],
-                    "group_owner": group_owner,
-                }
-            ),
-            error: function(e){
-                console.log(e);
-            },
-            success: function(msg){ 
-                window.location.replace('/home')
-            }
-        });
-    }
-</script>
-{% endblock %}
-
 {% block content %}
     <h2>Groups</h2>
     {% for group in groups %}
         <fieldset class="form-group row">
-            <legend class="col-form-legend col-sm-2">{{ group.group_name }}</legend>
-            {% for member in group_members[group.key.urlsafe()] %}
+            <legend class="col-form-legend col-sm-2">{{ group }}</legend>
+            {% for member in group_members[group] %}
                 <a href="/retrace/{{ member.user_id }}">
                     <p>{{ member.email }}</p>
                 </a>
             {% endfor %}
-            <form action="/groups/{{ group.key.urlsafe() }}" method="POST">
+            <form action="/groups/{{ group }}" method="POST">
                 <select name="addUser">
                     {% for u in all_users %}
                         {% if u not in group.members %}
@@ -67,22 +22,6 @@
                     Add User
                 </button>
             </form>
-            <a href="#" class="del-link" onclick="delGroup('{{ group.key.urlsafe() }}')">Delete Group</a>            
         </fieldset>
     {% endfor %}
-    <button  onclick="addGroup()">Add a Group</button>
-    <div class="popup">
-        <span class="popupAdd" id="addPopup">
-            <div class="form-group">
-                <label> Group Name </label>
-                <input name="group_name" type="text" required class="form-control"  />
-                <input name='group_owner' value="{{ current_user.user_id() }}" style="display:none">
-            </div>
-            <center>
-                <button type="button" class="btn btn-primary" onclick="postGroup()">
-                    Create Group
-                </button>
-            </center>
-        </span>
-    </div>
 {% endblock %}

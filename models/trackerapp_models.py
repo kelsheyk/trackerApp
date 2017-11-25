@@ -26,31 +26,16 @@ class Person(ndb.Model):
     user_id = ndb.StringProperty()
     email = ndb.StringProperty()
     name = ndb.StringProperty()
+    phone_number = ndb.StringProperty()
+    family_group_members = ndb.StringProperty(repeated=True)
+    friends_group_members = ndb.StringProperty(repeated=True)
+    other_group_members = ndb.StringProperty(repeated=True)
 
     @classmethod
     def get_by_user(cls, user):
         return cls.query().filter(cls.user_id == user.user_id()).get()
 # [END Person]
 
-
-# [START Group]
-class Group(ndb.Model):
-    group_owner = ndb.StringProperty()
-    group_name = ndb.StringProperty(verbose_name="Name")
-    group_members = ndb.StringProperty(repeated=True)
-
-    @classmethod
-    def get_by_owner_user(cls, user):
-        return cls.query().filter(cls.group_owner == user.user_id()).get()
-
-    @classmethod
-    def get_by_member_user(cls, user):
-        return cls.query().filter(user.user_id() in cls.group_members).get()
-
-
-    class RESTMeta:
-        user_owner_property = 'group_owner'
-# [END Group]
 
 # [START LocationPoint]
 class LocationPoint(ndb.Model):

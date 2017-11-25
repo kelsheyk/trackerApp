@@ -38,7 +38,6 @@ NAV_LINKS = [
     {"label": "Home", "link": "/home"},
     {"label": "Groups", "link": "/groups"},
     {"label": "Alerts", "link": "/alerts"},
-    {"label": "Followers", "link": "/followers"},
 ]
 
 def check_auth(request, isAppRequest=False):
@@ -123,21 +122,17 @@ class HomePage(webapp2.RequestHandler):
         tracked_people = []
         locations = []
         person_obj = Person.get_by_user(current_user)
-        groups_query = Group.query(
-            Group.group_owner == person_obj.user_id
-        )
-        groups = groups_query.fetch()
-        for group in groups:
-            for member_id in group.group_members:
-                person = Person.query(Person.user_id == member_id).get()
-                tracked_people.append(person)
-                location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
-                if len(location_list):
-                    locations.append({
-                        'user':person.email,
-                        'lat':location_list[0].tracked_location.lat,
-                        'lon':location_list[0].tracked_location.lon
-                    })
+        all_group_members = list(set(person_obj.family_group_members + person_obj.friends_group_members + person_obj.other_group_members))
+        for member_id in all_group_members:
+            person = Person.query(Person.user_id == member_id).get()
+            tracked_people.append(person)
+            location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
+            if len(location_list):
+                locations.append({
+                    'user':person.email,
+                    'lat':location_list[0].tracked_location.lat,
+                    'lon':location_list[0].tracked_location.lon
+                })
 
         template_values = {
             'navigation': NAV_LINKS,
@@ -195,17 +190,22 @@ class GroupsPage(webapp2.RequestHandler):
             self.redirect("/auth")
             return
         person_obj = Person.get_by_user(current_user)
-        groups_query = Group.query(
-            Group.group_owner == str(person_obj.user_id)
-        )
-        groups = groups_query.fetch()
+        groups = ["Family", "Friends", "Others"] 
         
         group_members = {}
-        for group in groups:
-            group_members[group.key.urlsafe()] = []
-            for member_id in group.group_members:
-                member_person = Person.query(Person.user_id == member_id).get()
-                group_members[group.key.urlsafe()].append(member_person)
+        group_members["Family"] = []
+        for member_id in person_obj.family_group_members:
+            member_person = Person.query(Person.user_id == member_id).get()
+            group_members["Family"].append(member_person)
+        group_members["Friends"] = []
+        for member_id in person_obj.friends_group_members:
+            member_person = Person.query(Person.user_id == member_id).get()
+            group_members["Friends"].append(member_person)
+        group_members["Others"] = []
+        for member_id in person_obj.other_group_members:
+            member_person = Person.query(Person.user_id == member_id).get()
+            group_members["Others"].append(member_person)
+
 
         all_users = Person.query().fetch()
 
@@ -224,7 +224,7 @@ class GroupsPage(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
     # This will me used to add user to Group only
-    def post(self, group_key_str):
+    def post(self, group_str):
         current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
 
         if current_user is None:
@@ -232,23 +232,39 @@ class GroupsPage(webapp2.RequestHandler):
             return
         person_obj = Person.get_by_user(current_user)
 
-        group_key = ndb.Key(urlsafe=group_key_str)
-        group_obj = group_key.get()
-        
         added_person_key_str = self.request.get("addUser")
         added_person_key = ndb.Key(urlsafe=added_person_key_str)
         added_person = added_person_key.get()
 
-        if len(list(group_obj.group_members)):
-            members = [p for p in group_obj.group_members]
-            members.append(added_person.user_id)
-            group_obj.group_members = members
-        else:
-            members = []
-            members.append(added_person.user_id)
-            group_obj.group_members = members
+        if (group_str == "Family"):
+            if len(list(person_obj.family_group_members)):
+                members = [p for p in person_obj.family_group_members]
+                members.append(added_person.user_id)
+                person_obj.family_group_members = list(set(members))
+            else:
+                members = []
+                members.append(added_person.user_id)
+                person_obj.family_group_members = list(set(members))
+        elif (group_str == "Friends"):
+            if len(list(person_obj.friends_group_members)):
+                members = [p for p in person_obj.friends_group_members]
+                members.append(added_person.user_id)
+                person_obj.friends_group_members = list(set(members))
+            else:
+                members = []
+                members.append(added_person.user_id)
+                person_obj.friends_group_members = list(set(members))
+        elif (group_str == "Others"):
+            if len(list(person_obj.other_group_members)):
+                members = [p for p in person_obj.other_group_members]
+                members.append(added_person.user_id)
+                person_obj.other_group_members = list(set(members))
+            else:
+                members = []
+                members.append(added_person.user_id)
+                person_obj.other_group_members = list(set(members))
 
-        group_obj.put()
+        person_obj.put()
         self.redirect('/groups')
 # [END GroupsPage]
 
@@ -258,20 +274,16 @@ class GetTracked(webapp2.RequestHandler):
         person_obj = Person.get_by_user(current_user)
 
         locations = []
-        groups_query = Group.query(
-            Group.group_owner == person_obj.user_id
-        )
-        groups = groups_query.fetch()
-        for group in groups:
-            for member_id in group.group_members:
-                person = Person.query(Person.user_id == member_id).get()
-                location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
-                if len(location_list):
-                    locations.append({
-                        'user':person.email,
-                        'lat':location_list[0].tracked_location.lat,
-                        'lon':location_list[0].tracked_location.lon
-                    })
+        all_group_members = list(set(person_obj.family_group_members + person_obj.friends_group_members + person_obj.other_group_members))
+        for member_id in all_group_members:
+            person = Person.query(Person.user_id == member_id).get()
+            location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
+            if len(location_list):
+                locations.append({
+                    'user':person.email,
+                    'lat':location_list[0].tracked_location.lat,
+                    'lon':location_list[0].tracked_location.lon
+                })
         self.response.out.write(json.dumps(locations))
 
 
@@ -424,18 +436,7 @@ app = webapp2.WSGIApplication([
         # Will be called for every PUT, right before the model is saved (also supports GET/POST/DELETE)
         #put_callback=lambda model, data: model
     ),
-    RESTHandler(
-        '/rest/groups',
-        Group, 
-        permissions={
-            'GET': PERMISSION_ANYONE,
-            'POST': PERMISSION_ANYONE,
-            'PUT': PERMISSION_OWNER_USER,
-            'DELETE': PERMISSION_ANYONE
-        },
-        #post_callback=
-    ),
-    
+        
     # Get list of locations by user_id:
     #/rest/locations?q=tracked_person%3D%27{{ user_id }}%27&order=tracked_time
     RESTHandler(
