@@ -214,6 +214,9 @@ public class LoginActivity extends AppCompatActivity implements
                 signOut();
                 break;
             case R.id.my_list_button:
+                Intent serviceIntent = new Intent(context, PostLocationService.class);
+                context.startService(serviceIntent);
+
                 Intent intent = new Intent(context, MyListActivity.class);
                 setNewActivityIntent(intent);
                 startActivity(intent);
