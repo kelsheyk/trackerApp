@@ -23,6 +23,10 @@ from models.trackerapp_models import *
 from google.appengine.api import app_identity
 from google.appengine.api import mail
 from datetime import datetime
+# from oauth2client import client, crypt
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader('templates'),
@@ -40,6 +44,7 @@ NAV_LINKS = [
     {"label": "Alerts", "link": "/alerts"},
 ]
 
+
 def check_auth(request, isAppRequest=False):
     """
         Checks if the current user is authenticated
@@ -48,9 +53,25 @@ def check_auth(request, isAppRequest=False):
     app_connection = False;
 
     if isAppRequest:
-        app_connection = True
-        current_user = Person(email=request.get("userEmail"))
-        return current_user, "", "", app_connection
+
+
+        try:
+            tokenId = request.get("idToken")
+
+            idinfo = client.verify_firebase_token(tokenId, request, None)
+            # # If multiple clients access the backend server:
+            # if idinfo['aud'] not in [ANDROID_CLIENT_ID, IOS_CLIENT_ID, WEB_CLIENT_ID]:
+            #     raise crypt.AppIdentityError("Unrecognized client.")
+            # if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            #     raise crypt.AppIdentityError("Wrong issuer.")
+            # if idinfo['hd'] != APPS_DOMAIN_NAME:
+            #     raise crypt.AppIdentityError("Wrong hosted domain.")
+            userid = idinfo['sub']
+        except crypt.AppIdentityError:
+            userid = None
+
+
+        return userid, "", "", True
 
     current_user = users.get_current_user()
     if current_user:
@@ -189,9 +210,12 @@ class GroupsPage(webapp2.RequestHandler):
         if current_user is None:
             self.redirect("/auth")
             return
+        # self.response.out.write(current_user)
+        #
+        # return
         person_obj = Person.get_by_user(current_user)
-        groups = ["Family", "Friends", "Others"] 
-        
+        groups = ["Family", "Friends", "Others"]
+
         group_members = {}
         group_members["Family"] = []
         for member_id in person_obj.family_group_members:
@@ -266,6 +290,89 @@ class GroupsPage(webapp2.RequestHandler):
 
         person_obj.put()
         self.redirect('/groups')
+# [END GroupsPage]
+
+
+# [START GroupsPage]
+class GroupsDroid(webapp2.RequestHandler):
+    def get(self):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request, True)
+        if current_user is None:
+            self.redirect("/auth")
+            return
+
+        current_user = users.User(current_user.email)
+        # self.response.out.write(current_user)
+        #
+        # return
+        person_obj = Person.get_by_user(current_user)
+        groups = ["Family", "Friends", "Others"]
+
+        group_members = {}
+        group_members["Family"] = []
+        for member_id in person_obj.family_group_members:
+            member_person = Person.query(Person.user_id == member_id).get()
+            group_members["Family"].append(member_person)
+        group_members["Friends"] = []
+        for member_id in person_obj.friends_group_members:
+            member_person = Person.query(Person.user_id == member_id).get()
+            group_members["Friends"].append(member_person)
+        group_members["Others"] = []
+        for member_id in person_obj.other_group_members:
+            member_person = Person.query(Person.user_id == member_id).get()
+            group_members["Others"].append(member_person)
+
+        all_users = Person.query().fetch()
+
+        groupsJson = { 'groups': groups, 'groupsMembers': group_members }
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(str(json.dumps(groupsJson)))
+
+    # This will me used to add user to Group only
+    def post(self, group_str):
+        current_user, auth_url, url_link_text, app_connection = check_auth(self.request)
+
+        if current_user is None:
+            self.redirect("/auth")
+            return
+        person_obj = Person.get_by_user(current_user)
+
+        added_person_key_str = self.request.get("addUser")
+        added_person_key = ndb.Key(urlsafe=added_person_key_str)
+        added_person = added_person_key.get()
+
+        if (group_str == "Family"):
+            if len(list(person_obj.family_group_members)):
+                members = [p for p in person_obj.family_group_members]
+                members.append(added_person.user_id)
+                person_obj.family_group_members = list(set(members))
+            else:
+                members = []
+                members.append(added_person.user_id)
+                person_obj.family_group_members = list(set(members))
+        elif (group_str == "Friends"):
+            if len(list(person_obj.friends_group_members)):
+                members = [p for p in person_obj.friends_group_members]
+                members.append(added_person.user_id)
+                person_obj.friends_group_members = list(set(members))
+            else:
+                members = []
+                members.append(added_person.user_id)
+                person_obj.friends_group_members = list(set(members))
+        elif (group_str == "Others"):
+            if len(list(person_obj.other_group_members)):
+                members = [p for p in person_obj.other_group_members]
+                members.append(added_person.user_id)
+                person_obj.other_group_members = list(set(members))
+            else:
+                members = []
+                members.append(added_person.user_id)
+                person_obj.other_group_members = list(set(members))
+
+        person_obj.put()
+        self.redirect('/groups')
+
 # [END GroupsPage]
 
 class GetTracked(webapp2.RequestHandler):
@@ -402,8 +509,10 @@ app = webapp2.WSGIApplication([
     ('/home', HomePage),
     ('/error',ErrorPage),
     ('/retrace/(.+)',RetracePage),
-    ('/groups',GroupsPage),
-    ('/groups/(.+)',GroupsPage),
+    ('/groups', GroupsPage),
+    ('/groups/(.+)', GroupsPage),
+    ('/groupsDroid', GroupsDroid),
+    ('/groupsDroid/(.+)',GroupsDroid),
     ('/get_tracked', GetTracked),
     ('/alerts',AlertsPage),
     ('/toggle_alert/(.+)', ToggleAlert),

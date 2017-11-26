@@ -22,6 +22,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import com.google.android.gms.maps.*;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -45,6 +51,10 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
         setContentView(R.layout.activity_my_list);
 
         userDataIntent = getIntent();
+
+        Log.i("*** URL ---->", "A10");
+        if(userDataIntent != null)
+            Log.i("*** URL ---->", userDataIntent.getStringExtra("userToken"));
         findViewById(R.id.manage_button).setOnClickListener(this);
 
         TabLayout mTabLayout = findViewById(R.id.tabs);
@@ -79,11 +89,79 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
 
 
         timer.scheduleAtFixedRate(new TimerTask() {
+            private ArrayList<String> curList;
             synchronized public void run()
             {
-                runOnUiThread(new Runnable() {
+                URL url = null;
+                TabLayout mTabLayout = findViewById(R.id.tabs);
+                // String serverUrl = "https://trackerapp-185915.appspot.com";
+                String serverUrl = "http://test-brice-1.appspot.com/groupsDroid?userToken=" +
+                                    userDataIntent.getStringExtra("userToken");
+                HttpURLConnection urlConnection = null;
+
+                if(mTabLayout.getSelectedTabPosition() == 0)
+                {
+//                    serverUrl += "/family?userEmail=" + "someEmail@gmail.com";
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 1)
+                {
+//                    serverUrl += "/friend?userEmail=" + "someEmail@gmail.com";
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 2)
+                {
+//                    serverUrl += "/others?userEmail=" + "someEmail@gmail.com";
+                }
+
+                try
+                {
+                    Log.i("URL ---->", serverUrl);
+
+                    int i;
+                    String payload = "";
+                    url = new URL(serverUrl);
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    InputStream is = new BufferedInputStream(urlConnection.getInputStream());
+
+                    while(is != null && (i = is.read()) != -1)
+                    {
+                        payload += (char)i;
+                    }
+
+                    Log.i("** Payload ---->", payload);
+//                    in.
+//                                    readStream(in);
+                }
+                catch (MalformedURLException e)
+                {
+                    e.printStackTrace();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    urlConnection.disconnect();
+                }
+
+                if(mTabLayout.getSelectedTabPosition() == 0)
+                {
+                    curList = familyList;
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 1)
+                {
+                    curList = friendList;
+                }
+                else if(mTabLayout.getSelectedTabPosition() == 2)
+                {
+                    curList = othersList;
+                }
+
+                runOnUiThread(new Runnable()
+                {
                     @Override
-                    public void run() {
+                    public void run()
+                    {
                         // Obtain the MapFragment and get notified when the map is ready to be used.
                         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
                         mapFragment.getMapAsync(new OnMapReadyCallback()
@@ -93,28 +171,12 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
                             {
                                 mMap = googleMap;
                                 AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
-                                TabLayout mTabLayout = findViewById(R.id.tabs);
 
                                 // Request trackees information every 15 seconds
                                 // TODO: Request the selected group/tab data
                                 // Need to pull the user's: name, email, phone, lat, lon
-                                familyList = handler.getFamilyList();
-                                friendList = handler.getFriendList();
-                                othersList = handler.getOthersList();
-                                Log.i("---->", "run");
-
-                                if(mTabLayout.getSelectedTabPosition() == 0)
-                                {
-                                    updateGroupLayout(googleMap, familyList);
-                                }
-                                else if(mTabLayout.getSelectedTabPosition() == 1)
-                                {
-                                    updateGroupLayout(googleMap, friendList);
-                                }
-                                else if(mTabLayout.getSelectedTabPosition() == 2)
-                                {
-                                    updateGroupLayout(googleMap, othersList);
-                                }
+                                Log.i("---->", "run ATF");
+                                updateGroupLayout(googleMap, curList);
                             }
                         });
                     }
@@ -163,12 +225,19 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
             LinearLayout layout = (LinearLayout) findViewById(R.id.Trackees_layout);
             layout.removeAllViews();
 
-            for(int i = 0; i < lst.size(); i++)
+            if(lst == null)
             {
-                String name = lst.get(i);
+                return;
+            }
+
+            int i = 0;
+            for(String name : lst)
+            {
+                name += i;
                 loc = new LatLng(-33.867+i*.005, 151.206-i*.005);
                 map.addMarker(new MarkerOptions().title(name).snippet("In Australia.").position(loc));
                 layout.addView(new TrackeeButton(context, userDataIntent, name));
+                i++;
             }
 
             if(loc != null)

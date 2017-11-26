@@ -189,16 +189,15 @@ public class LoginActivity extends AppCompatActivity implements
 
     private void setNewActivityIntent(Intent intent)
     {
-        if(acct == null)
+        if(user == null)
         {
             return;
         }
 
-        intent.putExtra("userName", acct.getDisplayName());
-        intent.putExtra("userEmail", acct.getEmail());
-        intent.putExtra("userId", acct.getId());
-        intent.putExtra("userToken", acct.getIdToken());
-//        Log.i(TAG, intent.getStringExtra("userToken"));
+        intent.putExtra("userName", user.getDisplayName());
+        intent.putExtra("userEmail", user.getEmail());
+        intent.putExtra("userId", user.getUid());
+        intent.putExtra("userToken", user.getIdToken(false).getResult().getToken());
     }
 
     @Override
