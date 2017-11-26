@@ -53,25 +53,14 @@ def check_auth(request, isAppRequest=False):
     app_connection = False;
 
     if isAppRequest:
-
-
         try:
-            tokenId = request.get("idToken")
-
-            idinfo = client.verify_firebase_token(tokenId, request, None)
-            # # If multiple clients access the backend server:
-            # if idinfo['aud'] not in [ANDROID_CLIENT_ID, IOS_CLIENT_ID, WEB_CLIENT_ID]:
-            #     raise crypt.AppIdentityError("Unrecognized client.")
-            # if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-            #     raise crypt.AppIdentityError("Wrong issuer.")
-            # if idinfo['hd'] != APPS_DOMAIN_NAME:
-            #     raise crypt.AppIdentityError("Wrong hosted domain.")
-            userid = idinfo['sub']
-        except crypt.AppIdentityError:
-            userid = None
+            userId = request.get("userId")
+            user = users.User(_user_id=userId)
+        except ValueError:
+            pass
 
 
-        return userid, "", "", True
+        return user, "", "", True
 
     current_user = users.get_current_user()
     if current_user:
@@ -301,10 +290,6 @@ class GroupsDroid(webapp2.RequestHandler):
             self.redirect("/auth")
             return
 
-        current_user = users.User(current_user.email)
-        # self.response.out.write(current_user)
-        #
-        # return
         person_obj = Person.get_by_user(current_user)
         groups = ["Family", "Friends", "Others"]
 

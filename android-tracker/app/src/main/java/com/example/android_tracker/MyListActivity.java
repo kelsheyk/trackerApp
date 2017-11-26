@@ -95,8 +95,8 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
                 URL url = null;
                 TabLayout mTabLayout = findViewById(R.id.tabs);
                 // String serverUrl = "https://trackerapp-185915.appspot.com";
-                String serverUrl = "http://test-brice-1.appspot.com/groupsDroid?userToken=" +
-                                    userDataIntent.getStringExtra("userToken");
+                String serverUrl = "http://test-brice-1.appspot.com/groupsDroid?userId=" +
+                                    userDataIntent.getStringExtra("userId");
                 HttpURLConnection urlConnection = null;
 
                 if(mTabLayout.getSelectedTabPosition() == 0)
@@ -114,7 +114,7 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
 
                 try
                 {
-                    Log.i("URL ---->", serverUrl);
+                    Log.i("**-** URL ---->", serverUrl);
 
                     int i;
                     String payload = "";
