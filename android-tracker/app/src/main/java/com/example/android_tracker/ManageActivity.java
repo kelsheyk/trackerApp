@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -45,24 +46,59 @@ public class ManageActivity extends AppCompatActivity{
         ArrayAdapter<String> groupadapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, items);
         groups.setAdapter(groupadapter);
 
-        //TODO: get tracker list
         String[] ListElements = new String[]{};
 
-        final List<String> TrackeeArrayList = new ArrayList<String>(Arrays.asList(ListElements));
+        List<String> TrackeeArrayList = new ArrayList<String>(Arrays.asList(ListElements));
+        AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
+        // TODO: set a listener to spinner
+        if (groups.getSelectedItem().toString() == "Family" )
+        {
+            TrackeeArrayList = handler.getFamilyList();
+        }
+
+        if (groups.getSelectedItem().toString() == "Friends" )
+        {
+            TrackeeArrayList = handler.getFriendList();
+        }
+        if (groups.getSelectedItem().toString() == "Others" )
+        {
+            TrackeeArrayList = handler.getOthersList();
+
+        }
+
 
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>
                 (ManageActivity.this, android.R.layout.simple_list_item_1, TrackeeArrayList);
 
         tracklist.setAdapter(adapter);
 
+        final List<String> finalTrackeeArrayList = TrackeeArrayList;
+
         AddButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view)
             {
 
-                TrackeeArrayList.add(addtrackee.getText().toString());
+                finalTrackeeArrayList.add(addtrackee.getText().toString());
                 adapter.notifyDataSetChanged();
+                AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
+
                 //TODO: assign added trackee to specified group
+                if (groups.getSelectedItem().toString() == "Family" )
+                {
+             //       handler.getFamilyList();
+                    Log.i("===> ", "Group = " + groups.getSelectedItem().toString());
+                }
+                if (groups.getSelectedItem().toString() == "Friends" )
+                {
+             //       handler.getFriendList();
+                    Log.i("===> ", "Group = " + groups.getSelectedItem().toString());
+                }
+                if (groups.getSelectedItem().toString() == "Others" )
+                {
+               //     handler.getOthersList();
+                    Log.i("===> ", "Group = " + groups.getSelectedItem().toString());
+                }
 
             }
         });
