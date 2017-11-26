@@ -9,8 +9,9 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +20,7 @@ import java.util.List;
 
 public class ManageActivity extends AppCompatActivity{
 
-    ListView tracklist;
+    LinearLayout tracklist;
     EditText addtrackee;
     Button AddButton;
     Button MyListButton;
@@ -35,7 +36,7 @@ public class ManageActivity extends AppCompatActivity{
 
         userDataIntent = getIntent();
 
-        tracklist = (ListView) findViewById(R.id.track_list);
+        tracklist = (LinearLayout) findViewById(R.id.track_list);
         addtrackee = (EditText) findViewById(R.id.add_trackee);
         AddButton = (Button) findViewById(R.id.add_button);
         MyListButton = (Button) findViewById(R.id.list_button);
@@ -48,53 +49,38 @@ public class ManageActivity extends AppCompatActivity{
 
         String[] ListElements = new String[]{};
 
-        List<String> TrackeeArrayList = new ArrayList<String>(Arrays.asList(ListElements));
+        final List<String> TrackeeArrayList = new ArrayList<String>(Arrays.asList(ListElements));
         AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
-        // TODO: set a listener to spinner
-        if (groups.getSelectedItem().toString() == "Family" )
-        {
-            TrackeeArrayList = handler.getFamilyList();
-        }
-
-        if (groups.getSelectedItem().toString() == "Friends" )
-        {
-            TrackeeArrayList = handler.getFriendList();
-        }
-        if (groups.getSelectedItem().toString() == "Others" )
-        {
-            TrackeeArrayList = handler.getOthersList();
-
-        }
 
 
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>
-                (ManageActivity.this, android.R.layout.simple_list_item_1, TrackeeArrayList);
+        TrackeeArrayList.addAll(handler.getFamilyList());
+        TrackeeArrayList.addAll(handler.getFriendList());
+        TrackeeArrayList.addAll(handler.getOthersList());
 
-        tracklist.setAdapter(adapter);
+        updateTrackeeList(TrackeeArrayList);
 
-        final List<String> finalTrackeeArrayList = TrackeeArrayList;
 
         AddButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view)
             {
 
-                finalTrackeeArrayList.add(addtrackee.getText().toString());
-                adapter.notifyDataSetChanged();
+                TrackeeArrayList.add(addtrackee.getText().toString());
+                tracklist.addView(new TrackeeButton(context, userDataIntent,addtrackee.getText().toString()));
                 AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
 
                 //TODO: assign added trackee to specified group
-                if (groups.getSelectedItem().toString() == "Family" )
+                if ((groups.getSelectedItem().toString()).equals("Family"))
                 {
              //       handler.getFamilyList();
                     Log.i("===> ", "Group = " + groups.getSelectedItem().toString());
                 }
-                if (groups.getSelectedItem().toString() == "Friends" )
+                if ((groups.getSelectedItem().toString()).equals("Friends"))
                 {
              //       handler.getFriendList();
                     Log.i("===> ", "Group = " + groups.getSelectedItem().toString());
                 }
-                if (groups.getSelectedItem().toString() == "Others" )
+                if ((groups.getSelectedItem().toString()).equals("Others"))
                 {
                //     handler.getOthersList();
                     Log.i("===> ", "Group = " + groups.getSelectedItem().toString());
@@ -102,7 +88,6 @@ public class ManageActivity extends AppCompatActivity{
 
             }
         });
-
 
         MyListButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,6 +97,15 @@ public class ManageActivity extends AppCompatActivity{
                 startActivity(userDataIntent);
             }
         });
+    }
+
+    private void updateTrackeeList(List<String> trackeeArrayList) {
+        for(int i = 0; i < trackeeArrayList.size(); i++)
+        {
+            String name = trackeeArrayList.get(i).toString();
+            tracklist.addView(new TrackeeButton(context, userDataIntent, name));
+        }
+
     }
 
 
