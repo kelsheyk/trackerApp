@@ -52,9 +52,9 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
 
         userDataIntent = getIntent();
 
-        Log.i("*** URL ---->", "A10");
-        if(userDataIntent != null)
-            Log.i("*** URL ---->", userDataIntent.getStringExtra("userToken"));
+//        Log.i("*** URL ---->", "A10");
+//        if(userDataIntent != null)
+//            Log.i("*** URL ---->", userDataIntent.getStringExtra("userToken"));
         findViewById(R.id.manage_button).setOnClickListener(this);
 
         TabLayout mTabLayout = findViewById(R.id.tabs);
@@ -87,30 +87,17 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
 
         timer = new Timer();
 
-
         timer.scheduleAtFixedRate(new TimerTask() {
             private ArrayList<String> curList;
             synchronized public void run()
             {
                 URL url = null;
                 TabLayout mTabLayout = findViewById(R.id.tabs);
-                // String serverUrl = "https://trackerapp-185915.appspot.com";
-                String serverUrl = "http://test-brice-1.appspot.com/groupsDroid?userId=" +
-                                    userDataIntent.getStringExtra("userId");
+                // String serverUrl = "http://trackerapp-185915.appspot.com";
+                String serverUrl = "http://trackerapp-185915.appspot.com/groupsDroid?userId=" +
+                                    userDataIntent.getStringExtra("userId") +
+                                    "&userToken=" + userDataIntent.getStringExtra("userToken") ;
                 HttpURLConnection urlConnection = null;
-
-                if(mTabLayout.getSelectedTabPosition() == 0)
-                {
-//                    serverUrl += "/family?userEmail=" + "someEmail@gmail.com";
-                }
-                else if(mTabLayout.getSelectedTabPosition() == 1)
-                {
-//                    serverUrl += "/friend?userEmail=" + "someEmail@gmail.com";
-                }
-                else if(mTabLayout.getSelectedTabPosition() == 2)
-                {
-//                    serverUrl += "/others?userEmail=" + "someEmail@gmail.com";
-                }
 
                 try
                 {
@@ -120,6 +107,8 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
                     String payload = "";
                     url = new URL(serverUrl);
                     urlConnection = (HttpURLConnection) url.openConnection();
+                    Log.i("** Message ---->", urlConnection.getResponseMessage());
+                    urlConnection.getInputStream();
                     InputStream is = new BufferedInputStream(urlConnection.getInputStream());
 
                     while(is != null && (i = is.read()) != -1)

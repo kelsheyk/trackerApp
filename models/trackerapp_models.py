@@ -33,7 +33,15 @@ class Person(ndb.Model):
 
     @classmethod
     def get_by_user(cls, user):
-        return cls.query().filter(cls.user_id == user.user_id()).get()
+        try:
+            return cls.query().filter(cls.user_id == user.user_id()).get()
+        except:
+            return cls.query().filter(cls.user_id == user).get()
+
+    @classmethod
+    def get_by(cls):
+        return cls.query()
+
 # [END Person]
 
 

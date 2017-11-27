@@ -53,14 +53,11 @@ def check_auth(request, isAppRequest=False):
     app_connection = False;
 
     if isAppRequest:
-        try:
-            userId = request.get("userId")
-            user = users.User(_user_id=userId)
-        except ValueError:
-            pass
-
-
-        return user, "", "", True
+        token = request.get("userToken")
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), '671966008147-5ai21s9elm6bml9rsmkmbvvrdr4i3l16.apps.googleusercontent.com')
+        userId = idinfo['sub']
+        # user = users.User(_user_id=userId)
+        return userId, "", "", True
 
     current_user = users.get_current_user()
     if current_user:
@@ -199,11 +196,14 @@ class GroupsPage(webapp2.RequestHandler):
         if current_user is None:
             self.redirect("/auth")
             return
-        # self.response.out.write(current_user)
-        #
-        # return
+
         person_obj = Person.get_by_user(current_user)
         groups = ["Family", "Friends", "Others"]
+
+        self.response.out.write(current_user.user_id)
+        self.response.out.write("\n")
+        self.response.out.write(person_obj)
+        return
 
         group_members = {}
         group_members["Family"] = []
@@ -285,13 +285,21 @@ class GroupsPage(webapp2.RequestHandler):
 # [START GroupsPage]
 class GroupsDroid(webapp2.RequestHandler):
     def get(self):
-        current_user, auth_url, url_link_text, app_connection = check_auth(self.request, True)
-        if current_user is None:
+        current_user_id, auth_url, url_link_text, app_connection = check_auth(self.request, True)
+        if current_user_id is None:
             self.redirect("/auth")
             return
 
-        person_obj = Person.get_by_user(current_user)
+        self.response.out.write(current_user_id)
+        person_obj = Person.get_by_user(current_user_id)
         groups = ["Family", "Friends", "Others"]
+
+        self.response.out.write('\n\n')
+        self.response.out.write(person_obj)
+
+        self.response.out.write('\n\n')
+        self.response.out.write(Person.get_by())
+        return
 
         group_members = {}
         group_members["Family"] = []

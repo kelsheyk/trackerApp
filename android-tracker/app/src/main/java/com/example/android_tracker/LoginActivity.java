@@ -78,6 +78,7 @@ public class LoginActivity extends AppCompatActivity implements
     {
         super.onStart();
         user = mAuth.getCurrentUser();
+        acct = GoogleSignIn.getLastSignedInAccount(this);
         updateUI(user);
     }
 
@@ -109,6 +110,7 @@ public class LoginActivity extends AppCompatActivity implements
     // [START auth_with_google]
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct)
     {
+        Log.i("**-** ID is  ---->", acct.getId());
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>()
@@ -189,15 +191,16 @@ public class LoginActivity extends AppCompatActivity implements
 
     private void setNewActivityIntent(Intent intent)
     {
-        if(user == null)
+        if(acct == null)
         {
             return;
         }
 
-        intent.putExtra("userName", user.getDisplayName());
-        intent.putExtra("userEmail", user.getEmail());
-        intent.putExtra("userId", user.getUid());
-        intent.putExtra("userToken", user.getIdToken(false).getResult().getToken());
+        intent.putExtra("userName", acct.getDisplayName());
+        intent.putExtra("userEmail", acct.getEmail());
+        intent.putExtra("userId", acct.getId());
+//        Log.i("0000000000000 ", user.toString());
+        intent.putExtra("userToken", acct.getIdToken());
     }
 
     @Override
