@@ -291,9 +291,13 @@ class PostDroidLoc(webapp2.RequestHandler):
 
         person_obj = Person.get_by_user_email(user_email)
 
-        # TODO: Use lat and lon to store this person object current location
-        lat = 30.0
-        lon = -97.0
+        locPt = LocationPoint(
+                tracked_person = person_obj.user_id,
+                tracked_location=ndb.GeoPt(lat,lon),
+        )
+        locPt.put()
+        #lat = 30.0
+        #lon = -97.0
 
         # self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(str(lat) + " " + str(lon) )
@@ -322,34 +326,56 @@ class GroupsDroid(webapp2.RequestHandler):
             # return
 
             tracked_person = LocationPoint.get_by_owner_person(member_person)
+            tracked_location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
+            if len(tracked_location_list):
+                lat = tracked_location_list[0].tracked_location.lat
+                lon = tracked_location_list[0].tracked_location.lon
+            else:
+                lat = ""
+                lon = ""
             group_members["Family"].append({
                 "email" : member_person.email,
                 "name" : member_person.name,
                 "phone" : member_person.phone_number,
-                "lat" : "", # tracked_person.tracked_location.lat,
-                "lon" : ""  # tracked_person.tracked_location.lon
+                "lat" : lat, 
+                "lon" : lon  
             })
 
         group_members["Friends"] = []
         for member_id in person_obj.friends_group_members:
             member_person = Person.query(Person.user_id == member_id).get()
+
+            tracked_location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
+            if len(tracked_location_list):
+                lat = tracked_location_list[0].tracked_location.lat
+                lon = tracked_location_list[0].tracked_location.lon
+            else:
+                lat = ""
+                lon = ""
             group_members["Friends"].append({
                 "email" : member_person.email,
                 "name" : member_person.name,
                 "phone" : member_person.phone_number,
-                "lat" : "", # tracked_person.tracked_location.lat,
-                "lon" : ""  # tracked_person.tracked_location.lon
+                "lat" : lat,
+                "lon" : lon
             })
 
         group_members["Others"] = []
         for member_id in person_obj.other_group_members:
             member_person = Person.query(Person.user_id == member_id).get()
+            tracked_location_list = LocationPoint.query(LocationPoint.tracked_person == member_id).order(-LocationPoint.tracked_time).fetch(1)
+            if len(tracked_location_list):
+                lat = tracked_location_list[0].tracked_location.lat
+                lon = tracked_location_list[0].tracked_location.lon
+            else:
+                lat = ""
+                lon = ""
             group_members["Others"].append({
                 "email" : member_person.email,
                 "name" : member_person.name,
                 "phone" : member_person.phone_number,
-                "lat" : "", # tracked_person.tracked_location.lat,
-                "lon" : ""  # tracked_person.tracked_location.lon
+                "lat" : lat,
+                "lon" : lon
             })
 
         groupsJson = { 'groups': groups, 'groupsMembers': group_members }
@@ -415,9 +441,15 @@ class SingleDroidLoc(webapp2.RequestHandler):
 
         trackeeObj = Person.get_by_user_email(self.request.get("trackeeEmail"))
 
-        # TODO: Use trackeeObj to get this person's location
-        lat =  30.0 + random.uniform(0, .09)
-        lon = -97.0 + random.uniform(0, .09)
+        tracked_location_list = LocationPoint.query(LocationPoint.tracked_person == trackeeObj.user_id).order(-LocationPoint.tracked_time).fetch(1)
+        if len(tracked_location_list):
+            lat = tracked_location_list[0].tracked_location.lat
+            lon = tracked_location_list[0].tracked_location.lon
+        else:
+            lat = ""
+            lon = ""
+        #lat =  30.0 + random.uniform(0, .09)
+        #lon = -97.0 + random.uniform(0, .09)
 
         location = { "trackee" : trackeeObj.email, 'lat': lat, 'lon': lon }
 
@@ -580,7 +612,6 @@ app = webapp2.WSGIApplication([
     # GET filtered list of people: /rest/people?q=<GQL query>  
     #    Example: /rest/people?q=email%3D%27kelseyking511@gmail.com%27
     #
-    #TODO: add docs on POST,PUT,DELETE
 
     
     # REST endpoints reference:
