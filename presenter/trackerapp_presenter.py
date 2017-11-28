@@ -54,10 +54,12 @@ def check_auth(request, isAppRequest=False):
 
     if isAppRequest:
         token = request.get("userToken")
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), '671966008147-5ai21s9elm6bml9rsmkmbvvrdr4i3l16.apps.googleusercontent.com')
-        userId = idinfo['sub']
-        # user = users.User(_user_id=userId)
-        return userId, "", "", True
+        try:
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(), '671966008147-5ai21s9elm6bml9rsmkmbvvrdr4i3l16.apps.googleusercontent.com')
+            userEmail = idinfo['email']
+        except:
+            userEmail = request.get("userEmail")
+        return userEmail, "", "", True
 
     current_user = users.get_current_user()
     if current_user:
@@ -200,11 +202,6 @@ class GroupsPage(webapp2.RequestHandler):
         person_obj = Person.get_by_user(current_user)
         groups = ["Family", "Friends", "Others"]
 
-        self.response.out.write(current_user.user_id)
-        self.response.out.write("\n")
-        self.response.out.write(person_obj)
-        return
-
         group_members = {}
         group_members["Family"] = []
         for member_id in person_obj.family_group_members:
@@ -281,41 +278,79 @@ class GroupsPage(webapp2.RequestHandler):
         self.redirect('/groups')
 # [END GroupsPage]
 
+#[START PostDroidLoc]
+class PostDroidLoc(webapp2.RequestHandler):
+    def post(self):
+        user_email, auth_url, url_link_text, app_connection = check_auth(self.request, True)
+        lat = self.request.get("lat")
+        lon = self.request.get("lon")
 
-# [START GroupsPage]
-class GroupsDroid(webapp2.RequestHandler):
-    def get(self):
-        current_user_id, auth_url, url_link_text, app_connection = check_auth(self.request, True)
-        if current_user_id is None:
+        if user_email is None:
             self.redirect("/auth")
             return
 
-        self.response.out.write(current_user_id)
-        person_obj = Person.get_by_user(current_user_id)
+        person_obj = Person.get_by_user_email(user_email)
+
+        # TODO: Use lat and lon to store this person object current location
+        lat = 30.0
+        lon = -97.0
+
+        # self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(str(lat) + " " + str(lon) )
+#[END PostDroidLoc]
+
+# [START GroupsDroid]
+class GroupsDroid(webapp2.RequestHandler):
+    def get(self):
+        user_email, auth_url, url_link_text, app_connection = check_auth(self.request, True)
+        if user_email is None:
+            self.redirect("/auth")
+            return
+
+        person_obj = Person.get_by_user_email(user_email)
         groups = ["Family", "Friends", "Others"]
-
-        self.response.out.write('\n\n')
-        self.response.out.write(person_obj)
-
-        self.response.out.write('\n\n')
-        self.response.out.write(Person.get_by())
-        return
 
         group_members = {}
         group_members["Family"] = []
         for member_id in person_obj.family_group_members:
             member_person = Person.query(Person.user_id == member_id).get()
-            group_members["Family"].append(member_person)
+
+            # self.response.out.write(str(str(member_person)))
+            # self.response.out.write(str(json.dumps('\n\n')))
+            # self.response.out.write(str(str(member_person.email)))
+            # self.response.out.write(str(json.dumps('\n\n')))
+            # return
+
+            tracked_person = LocationPoint.get_by_owner_person(member_person)
+            group_members["Family"].append({
+                "email" : member_person.email,
+                "name" : member_person.name,
+                "phone" : member_person.phone_number,
+                "lat" : "", # tracked_person.tracked_location.lat,
+                "lon" : ""  # tracked_person.tracked_location.lon
+            })
+
         group_members["Friends"] = []
         for member_id in person_obj.friends_group_members:
             member_person = Person.query(Person.user_id == member_id).get()
-            group_members["Friends"].append(member_person)
+            group_members["Friends"].append({
+                "email" : member_person.email,
+                "name" : member_person.name,
+                "phone" : member_person.phone_number,
+                "lat" : "", # tracked_person.tracked_location.lat,
+                "lon" : ""  # tracked_person.tracked_location.lon
+            })
+
         group_members["Others"] = []
         for member_id in person_obj.other_group_members:
             member_person = Person.query(Person.user_id == member_id).get()
-            group_members["Others"].append(member_person)
-
-        all_users = Person.query().fetch()
+            group_members["Others"].append({
+                "email" : member_person.email,
+                "name" : member_person.name,
+                "phone" : member_person.phone_number,
+                "lat" : "", # tracked_person.tracked_location.lat,
+                "lon" : ""  # tracked_person.tracked_location.lon
+            })
 
         groupsJson = { 'groups': groups, 'groupsMembers': group_members }
 
@@ -366,7 +401,30 @@ class GroupsDroid(webapp2.RequestHandler):
         person_obj.put()
         self.redirect('/groups')
 
-# [END GroupsPage]
+# [END GroupsDroid]
+
+#  [START SingleDroidLoc]
+class SingleDroidLoc(webapp2.RequestHandler):
+    def get(self):
+        user_email, auth_url, url_link_text, app_connection = check_auth(self.request, True)
+        if user_email is None:
+            self.redirect("/auth")
+            return
+
+        person_obj = Person.get_by_user_email(user_email)
+
+        trackeeObj = Person.get_by_user_email(self.request.get("trackeeEmail"))
+
+        # TODO: Use trackeeObj to get this person's location
+        lat =  30.0 + random.uniform(0, .09)
+        lon = -97.0 + random.uniform(0, .09)
+
+        location = { "trackee" : trackeeObj.email, 'lat': lat, 'lon': lon }
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(str(json.dumps(location)))
+
+# [END SingleDroidLoc]
 
 class GetTracked(webapp2.RequestHandler):
     def get(self):
@@ -506,6 +564,10 @@ app = webapp2.WSGIApplication([
     ('/groups/(.+)', GroupsPage),
     ('/groupsDroid', GroupsDroid),
     ('/groupsDroid/(.+)',GroupsDroid),
+    ('/postLocation', PostDroidLoc),
+    ('/postLocation/(.+)', PostDroidLoc),
+    ('/singleDroid', SingleDroidLoc),
+    ('/singleDroid/(.+)', SingleDroidLoc),
     ('/get_tracked', GetTracked),
     ('/alerts',AlertsPage),
     ('/toggle_alert/(.+)', ToggleAlert),

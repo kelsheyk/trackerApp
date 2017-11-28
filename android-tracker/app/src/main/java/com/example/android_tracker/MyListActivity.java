@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +20,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 
 import com.google.android.gms.maps.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -28,16 +31,15 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 public class MyListActivity extends FragmentActivity implements View.OnClickListener
 {
-    private static ArrayList<String> familyList;
-    private static ArrayList<String> friendList;
-    private static ArrayList<String> othersList;
+    private static JsonArray familyList;
+    private static JsonArray friendList;
+    private static JsonArray othersList;
 
     private static final int REQUEST_LOCATION = 9003;
     private GoogleMap mMap;
@@ -51,10 +53,6 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
         setContentView(R.layout.activity_my_list);
 
         userDataIntent = getIntent();
-
-//        Log.i("*** URL ---->", "A10");
-//        if(userDataIntent != null)
-//            Log.i("*** URL ---->", userDataIntent.getStringExtra("userToken"));
         findViewById(R.id.manage_button).setOnClickListener(this);
 
         TabLayout mTabLayout = findViewById(R.id.tabs);
@@ -88,26 +86,24 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
         timer = new Timer();
 
         timer.scheduleAtFixedRate(new TimerTask() {
-            private ArrayList<String> curList;
+            private JsonArray curList;
             synchronized public void run()
             {
                 URL url = null;
-                TabLayout mTabLayout = findViewById(R.id.tabs);
-                // String serverUrl = "http://trackerapp-185915.appspot.com";
-                String serverUrl = "http://trackerapp-185915.appspot.com/groupsDroid?userId=" +
-                                    userDataIntent.getStringExtra("userId") +
-                                    "&userToken=" + userDataIntent.getStringExtra("userToken") ;
                 HttpURLConnection urlConnection = null;
+                TabLayout mTabLayout = findViewById(R.id.tabs);
+                String serverUrl = "http://trackerapp-185915.appspot.com/groupsDroid?userToken=" +
+                                    userDataIntent.getStringExtra("userToken") + "&userEmail=" +
+                                    userDataIntent.getStringExtra("userEmail") ;
 
                 try
                 {
-                    Log.i("**-** URL ---->", serverUrl);
+                    Log.i("**-** SERVING URL ---->", serverUrl);
 
                     int i;
                     String payload = "";
                     url = new URL(serverUrl);
                     urlConnection = (HttpURLConnection) url.openConnection();
-                    Log.i("** Message ---->", urlConnection.getResponseMessage());
                     urlConnection.getInputStream();
                     InputStream is = new BufferedInputStream(urlConnection.getInputStream());
 
@@ -116,9 +112,13 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
                         payload += (char)i;
                     }
 
-                    Log.i("** Payload ---->", payload);
-//                    in.
-//                                    readStream(in);
+                    JsonParser parser = new JsonParser();
+                    JsonObject json = parser.parse(payload).getAsJsonObject().getAsJsonObject("groupsMembers");
+
+                    // Update lists
+                    familyList = json.get("Family").getAsJsonArray();
+                    friendList = json.get("Friends").getAsJsonArray();
+                    othersList = json.get("Others").getAsJsonArray();
                 }
                 catch (MalformedURLException e)
                 {
@@ -159,19 +159,13 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
                             public void onMapReady(GoogleMap googleMap)
                             {
                                 mMap = googleMap;
-                                AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
-
-                                // Request trackees information every 15 seconds
-                                // TODO: Request the selected group/tab data
-                                // Need to pull the user's: name, email, phone, lat, lon
-                                Log.i("---->", "run ATF");
                                 updateGroupLayout(googleMap, curList);
                             }
                         });
                     }
                 });
             }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(15));
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(30));
     }
 
     @Override
@@ -180,7 +174,6 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
         super.onPause();
         if(timer != null)
         {
-            Log.i("---->", "Cancel Event");
             timer.cancel();
         }
     }
@@ -200,7 +193,7 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
     }
 
     @SuppressLint("MissingPermission")
-    void updateGroupLayout(GoogleMap map, final ArrayList<String> lst)
+    void updateGroupLayout(GoogleMap map, final JsonArray lst)
     {
         if(map == null)
         {
@@ -220,13 +213,32 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
             }
 
             int i = 0;
-            for(String name : lst)
+            for(JsonElement element : lst)
             {
-                name += i;
-                loc = new LatLng(-33.867+i*.005, 151.206-i*.005);
-                map.addMarker(new MarkerOptions().title(name).snippet("In Australia.").position(loc));
-                layout.addView(new TrackeeButton(context, userDataIntent, name));
-                i++;
+                try
+                {
+                    double lat = -33.867 + i * .005;
+                    double lon = 151.206 - i * .005;
+
+                    try
+                    {
+                        lat = element.getAsJsonObject().get("lat").getAsInt();
+                        lon = element.getAsJsonObject().get("lon").getAsInt();
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+
+                    String email = element.getAsJsonObject().get("email").getAsString();
+                    loc = new LatLng(-33.867 + i * .005, 151.206 - i * .005);
+                    map.addMarker(new MarkerOptions().title(email).snippet("In USA").position(loc));
+                    layout.addView(new TrackeeButton(context, userDataIntent, email));
+                    i++;
+                }
+                catch(Exception e)
+                {
+                }
             }
 
             if(loc != null)
@@ -236,7 +248,6 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
         }
         catch (Exception e)
         {
-            Log.w("---->", "Error", e);
         }
     }
 

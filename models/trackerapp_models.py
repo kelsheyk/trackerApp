@@ -39,8 +39,8 @@ class Person(ndb.Model):
             return cls.query().filter(cls.user_id == user).get()
 
     @classmethod
-    def get_by(cls):
-        return cls.query()
+    def get_by_user_email(cls, email):
+        return cls.query().filter(cls.email == email).get()
 
 # [END Person]
 
@@ -54,6 +54,10 @@ class LocationPoint(ndb.Model):
     @classmethod
     def get_by_owner_user(cls, user):
         return cls.query().filter(cls.tracked_person == user.user_id()).get()
+
+    @classmethod
+    def get_by_owner_person(cls, person):
+        return cls.query().filter(cls.tracked_person == person.user_id).get()
 # [END LocationPoint]
 
 

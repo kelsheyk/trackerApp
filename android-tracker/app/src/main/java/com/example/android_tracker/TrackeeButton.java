@@ -15,18 +15,19 @@ import com.google.gson.JsonObject;
 
 public class TrackeeButton extends android.support.v7.widget.AppCompatButton // implements AsyncResponse
 {
-    String name;
+    String email;
     Context context;
     Intent singleTrackIntent;
 
 
-    public TrackeeButton(final Context con, Intent intent, String name)
+    public TrackeeButton(final Context con, Intent intent, String mail)
     {
         super(con);
+        this.email = mail;
         this.context = con;
         singleTrackIntent = intent;
 
-        this.setText(name);
+        this.setText(email);
         this.setTextSize(16);
         this.setClickable(true);
         this.setLayoutParams(new LinearLayout.LayoutParams( LinearLayout.LayoutParams.MATCH_PARENT,
@@ -37,6 +38,7 @@ public class TrackeeButton extends android.support.v7.widget.AppCompatButton // 
             @Override
             public void onClick(View view)
             {
+                singleTrackIntent.putExtra("trackeeEmail", email);
                 singleTrackIntent.setClass(context, SingleTrackActivity.class);
                 context.startActivity(singleTrackIntent);
             }

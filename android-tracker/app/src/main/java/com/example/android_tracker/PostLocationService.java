@@ -1,6 +1,5 @@
 package com.example.android_tracker;
 
-import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,19 +8,19 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -42,6 +41,12 @@ public class PostLocationService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
+        userIntent = intent;
 
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask()
@@ -81,9 +86,57 @@ public class PostLocationService extends Service {
 
                 double longitude = bestLocation.getLongitude();
                 double latitude = bestLocation.getLatitude();
-                Log.i("--------------", "==> " + latitude + " " + longitude);
+
+                URL url = null;
+                HttpURLConnection urlConnection = null;
+                String serverUrl = "http://trackerapp-185915.appspot.com/postLocation" +
+                                    "?userToken=" + userIntent.getStringExtra("userToken") +
+                                    "&userEmail=" + userIntent.getStringExtra("userEmail") +
+                                    "&lat=" + latitude +
+                                    "&lon=" + longitude;
+
+                try
+                {
+                    int i;
+                    String payload = "";
+                    url = new URL(serverUrl);
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setDoInput(true);
+                    urlConnection.setDoOutput(true);
+                    urlConnection.setRequestMethod("POST");
+
+                    OutputStream outputStream = urlConnection.getOutputStream();
+
+                    BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
+                    bufferedWriter.flush();
+
+                    urlConnection.connect();
+
+                    InputStream is = new BufferedInputStream(urlConnection.getInputStream());
+
+                    while(is != null && (i = is.read()) != -1)
+                    {
+                        payload += (char)i;
+                    }
+
+                    Log.i("==> response", payload);
+                }
+                catch (MalformedURLException e)
+                {
+                    e.printStackTrace();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    urlConnection.disconnect();
+                }
             }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(10));
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(60));
+
+        return START_STICKY_COMPATIBILITY;
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)

@@ -15,11 +15,18 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +39,8 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
     private Context context = this;
     private Intent userDataIntent;
     private Marker oldOriginMarker;
+    private double lat;
+    private double lon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +72,51 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
         timer.scheduleAtFixedRate(new TimerTask() {
             synchronized public void run()
             {
+                URL url = null;
+                HttpURLConnection urlConnection = null;
+                TabLayout mTabLayout = findViewById(R.id.tabs);
+                String serverUrl = "http://trackerapp-185915.appspot.com/singleDroid" +
+                        "?userToken=" + userDataIntent.getStringExtra("userToken") +
+                        "&userEmail=" + userDataIntent.getStringExtra("userEmail") +
+                        "&trackeeEmail=" + userDataIntent.getStringExtra("trackeeEmail");
+
+                try
+                {
+                    Log.i("**-- Tracking URL --**", serverUrl);
+
+                    int i;
+                    String payload = "";
+                    url = new URL(serverUrl);
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.getInputStream();
+                    InputStream is = new BufferedInputStream(urlConnection.getInputStream());
+
+                    while(is != null && (i = is.read()) != -1)
+                    {
+                        payload += (char)i;
+                    }
+
+                    JsonParser parser = new JsonParser();
+                    JsonObject json = parser.parse(payload).getAsJsonObject();
+
+                    lat = json.get("lat").getAsDouble();
+                    lon = json.get("lon").getAsDouble();
+
+                    Log.i("**-- Response --**", json.toString());
+                }
+                catch (MalformedURLException e)
+                {
+                    e.printStackTrace();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    urlConnection.disconnect();
+                }
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -74,20 +128,18 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                             public void onMapReady(GoogleMap googleMap)
                             {
                                 mMap = googleMap;
-                                AsyncHttp handler = new AsyncHttp(context, null, userDataIntent);
-                                TabLayout mTabLayout = findViewById(R.id.tabs);
-
-                                // Request trackees information every 15 seconds
-                                // TODO: Request the selected group/tab data
-                                // Need to pull the user's: name, email, phone, lat, lon
-                                String name = handler.getTrackedUserData();
-                                Log.i("---->", "run");
-
-                                LatLng loc = new LatLng(-33.867+20*.005, 151.206-20*.005);
-                                mMap.addMarker(new MarkerOptions().title(name).snippet("In Australia.").position(loc));
+                                mMap.clear();
+                                LatLng loc = new LatLng(lat, lon);
+                                mMap.addMarker(new MarkerOptions().title(userDataIntent.getStringExtra("trackeeEmail")).snippet("In Australia.").position(loc));
                                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 13));
 
-                                mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener(){
+                                if(oldOriginMarker != null)
+                                {
+                                    mMap.addMarker(new MarkerOptions().position(oldOriginMarker.getPosition()).title("Alert Origin"));
+                                }
+
+                                mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener()
+                                {
                                     @Override
                                     public void onMapClick(LatLng point)
                                     {
@@ -96,7 +148,6 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                                         {
                                             oldOriginMarker.remove();
                                         }
-
                                         oldOriginMarker = mMap.addMarker(new MarkerOptions().position(point).title("Alert Origin"));
                                     }
                                 });
@@ -105,7 +156,7 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                     }
                 });
             }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(15));
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(30));
     }
 
     @Override
