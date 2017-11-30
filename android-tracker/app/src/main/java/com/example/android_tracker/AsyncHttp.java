@@ -17,6 +17,15 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
@@ -82,7 +91,7 @@ public class AsyncHttp extends AppCompatActivity{
     }
 
     private void post(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        client.post(getAbsoluteUrl(url), params, responseHandler);
+        client.post(url, params, responseHandler);
     }
 
     private String getAbsoluteUrl(String relativeUrl)
@@ -207,6 +216,29 @@ public class AsyncHttp extends AppCompatActivity{
         return "someone";
     }
 
-    public void postMyLocation() {
+    public void postMyLocation(final String serverUrl)
+    {
+        HttpURLConnection urlConnection = null;
+
+        try
+        {
+            int i;
+            this.post(serverUrl, null, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody)
+                {
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
+
 }

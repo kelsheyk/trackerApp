@@ -88,7 +88,6 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                     String payload = "";
                     url = new URL(serverUrl);
                     urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.getInputStream();
                     InputStream is = new BufferedInputStream(urlConnection.getInputStream());
 
                     while(is != null && (i = is.read()) != -1)
@@ -99,8 +98,15 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                     JsonParser parser = new JsonParser();
                     JsonObject json = parser.parse(payload).getAsJsonObject();
 
-                    lat = json.get("lat").getAsDouble();
-                    lon = json.get("lon").getAsDouble();
+                    if(json.get("lat").getAsString().isEmpty() || json.get("lat").getAsString().isEmpty())
+                    {
+                        lat = lon = 999;
+                    }
+                    else
+                    {
+                        lat = json.get("lat").getAsDouble();
+                        lon = json.get("lon").getAsDouble();
+                    }
 
                     Log.i("**-- Response --**", json.toString());
                 }
@@ -129,6 +135,12 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                             {
                                 mMap = googleMap;
                                 mMap.clear();
+
+                                if(lat == 999 || lon == 999)
+                                {
+                                    return;
+                                }
+
                                 LatLng loc = new LatLng(lat, lon);
                                 mMap.addMarker(new MarkerOptions().title(userDataIntent.getStringExtra("trackeeEmail")).snippet("In Australia.").position(loc));
                                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 13));
@@ -156,7 +168,7 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                     }
                 });
             }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(30));
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(10));
     }
 
     @Override
@@ -165,7 +177,6 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
         super.onPause();
         if(timer != null)
         {
-            Log.i("---->", "Cancel Event s");
             timer.cancel();
         }
     }
@@ -182,7 +193,6 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                     Toast.makeText(context, "Origin or radius not selected on map!", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Log.i("===> ", "Val = " + radius.getSelectedItem().toString());
                 break;
             }
             case R.id.single_mylist_button:

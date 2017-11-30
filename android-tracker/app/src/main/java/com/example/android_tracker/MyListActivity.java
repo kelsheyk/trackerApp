@@ -104,7 +104,6 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
                     String payload = "";
                     url = new URL(serverUrl);
                     urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.getInputStream();
                     InputStream is = new BufferedInputStream(urlConnection.getInputStream());
 
                     while(is != null && (i = is.read()) != -1)
@@ -165,7 +164,7 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
                     }
                 });
             }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(30));
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(60));
     }
 
     @Override
@@ -217,23 +216,23 @@ public class MyListActivity extends FragmentActivity implements View.OnClickList
             {
                 try
                 {
-                    double lat = -33.867 + i * .005;
-                    double lon = 151.206 - i * .005;
-
+                    String email = element.getAsJsonObject().get("email").getAsString();
                     try
                     {
-                        lat = element.getAsJsonObject().get("lat").getAsInt();
-                        lon = element.getAsJsonObject().get("lon").getAsInt();
+                        double lat = element.getAsJsonObject().get("lat").getAsDouble();
+                        double lon = element.getAsJsonObject().get("lon").getAsDouble();
+                        userDataIntent.putExtra("lat", lat);
+                        userDataIntent.putExtra("lon", lon);
+
+                        loc = new LatLng(lat, lon);
+                        map.addMarker(new MarkerOptions().title(email).snippet("In USA").position(loc));
+                        layout.addView(new TrackeeButton(context, userDataIntent, email));
                     }
                     catch (Exception e)
                     {
-
+                        layout.addView(new TrackeeButton(context, userDataIntent, email + "   [n/a]"));
                     }
 
-                    String email = element.getAsJsonObject().get("email").getAsString();
-                    loc = new LatLng(-33.867 + i * .005, 151.206 - i * .005);
-                    map.addMarker(new MarkerOptions().title(email).snippet("In USA").position(loc));
-                    layout.addView(new TrackeeButton(context, userDataIntent, email));
                     i++;
                 }
                 catch(Exception e)

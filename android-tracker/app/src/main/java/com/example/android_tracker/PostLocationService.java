@@ -5,26 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.widget.Toast;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
+
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -32,10 +21,39 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
  * Created by brice on 11/24/17.
  */
 
-public class PostLocationService extends Service {
+public class PostLocationService extends Service
+{
+    /*---------- Listener class to get coordinates ------------- */
+    private class MyLocationListener implements LocationListener
+    {
+        @Override
+        public void onLocationChanged(Location loc)
+        {
+            double longitude = loc.getLongitude();
+            double latitude = loc.getLatitude();
+
+            String serverUrl = "http://trackerapp-185915.appspot.com/postLocation" +
+                    "?userToken=" + userIntent.getStringExtra("userToken") +
+                    "&userEmail=" + userIntent.getStringExtra("userEmail") +
+                    "&lat=" + latitude +
+                    "&lon=" + longitude;
+
+            AsyncHttp tsk = new AsyncHttp(getApplicationContext(), null, userIntent);
+            tsk.postMyLocation(serverUrl);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+        @Override
+        public void onProviderDisabled(String provider) {}
+
+        @Override
+        public void onProviderEnabled(String provider) {}
+    }
+
     private Context context = this;
     private Intent userIntent;
-    private Timer timer = null;
     private static int REQUEST_USER_LOCATION = 9005;
 
     @Override
@@ -48,93 +66,19 @@ public class PostLocationService extends Service {
         super.onStartCommand(intent, flags, startId);
         userIntent = intent;
 
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask()
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
-            synchronized public void run()
-            {
-                if (ActivityCompat.checkSelfPermission(getApplicationContext(), ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                {
-                    ActivityCompat.requestPermissions(null, new String[]{ACCESS_FINE_LOCATION}, REQUEST_USER_LOCATION);
-                    return;
-                }
+            ActivityCompat.requestPermissions(null, new String[]{ACCESS_FINE_LOCATION}, REQUEST_USER_LOCATION);
+            return START_STICKY_COMPATIBILITY;
+        }
 
-                LocationManager lm = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
-                List<String> providers = lm.getProviders(true);
-                Location bestLocation = null;
-
-                for (String provider : providers)
-                {
-                    Location l = lm.getLastKnownLocation(provider);
-                    if (l == null)
-                    {
-                        continue;
-                    }
-
-                    if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy())
-                    {
-                        bestLocation = l;
-                    }
-                }
-
-                if(bestLocation == null)
-                {
-                    timer.cancel();
-                    return;
-                }
-
-                double longitude = bestLocation.getLongitude();
-                double latitude = bestLocation.getLatitude();
-
-                URL url = null;
-                HttpURLConnection urlConnection = null;
-                String serverUrl = "http://trackerapp-185915.appspot.com/postLocation" +
-                                    "?userToken=" + userIntent.getStringExtra("userToken") +
-                                    "&userEmail=" + userIntent.getStringExtra("userEmail") +
-                                    "&lat=" + latitude +
-                                    "&lon=" + longitude;
-
-                try
-                {
-                    int i;
-                    String payload = "";
-                    url = new URL(serverUrl);
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setDoInput(true);
-                    urlConnection.setDoOutput(true);
-                    urlConnection.setRequestMethod("POST");
-
-                    OutputStream outputStream = urlConnection.getOutputStream();
-
-                    BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
-                    bufferedWriter.flush();
-
-                    urlConnection.connect();
-
-                    InputStream is = new BufferedInputStream(urlConnection.getInputStream());
-
-                    while(is != null && (i = is.read()) != -1)
-                    {
-                        payload += (char)i;
-                    }
-
-                    Log.i("==> response", payload);
-                }
-                catch (MalformedURLException e)
-                {
-                    e.printStackTrace();
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-                finally
-                {
-                    urlConnection.disconnect();
-                }
-            }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(60));
+        LocationManager lm = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+        if(lm.isProviderEnabled(LocationManager.GPS_PROVIDER) )
+        {
+            LocationListener locationListener = new MyLocationListener();
+            lm.requestLocationUpdates( LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
+        }
 
         return START_STICKY_COMPATIBILITY;
     }
