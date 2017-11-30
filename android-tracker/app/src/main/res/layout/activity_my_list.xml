@@ -5,7 +5,7 @@
 
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/blue_grey_700"
+    android:background="@android:color/white"
     android:orientation="vertical"
     tools:context="com.example.android_tracker.MyListActivity">
 
@@ -23,17 +23,23 @@
         android:text="Tracking"
         android:textAlignment="center"
         android:textAllCaps="false"
+        android:textColor="@android:color/black"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold|italic" />
 
     <android.support.design.widget.TabLayout
         android:id="@+id/tabs"
         android:layout_width="match_parent"
-        android:layout_height="38dp">
+        android:layout_height="38dp"
+        map:tabBackground="@drawable/tab_color_selector"
+        map:tabIndicatorColor="@color/colorPrimary"
+        map:tabSelectedTextColor="@android:color/white"
+        map:tabTextColor="@android:color/black">
 
         <android.support.design.widget.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="#5bddfa"
             android:text="Family" />
 
         <android.support.design.widget.TabItem
@@ -70,5 +76,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:textColor="@android:color/white"
+        android:background="@drawable/rounded_button"
         android:text="Manage" />
 </LinearLayout>
