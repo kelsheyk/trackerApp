@@ -86,7 +86,8 @@ public class AsyncHttp extends AppCompatActivity{
     }
 
 
-    private void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
+    private void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler)
+    {
         client.get(getAbsoluteUrl(url), params, responseHandler);
     }
 
@@ -110,105 +111,6 @@ public class AsyncHttp extends AppCompatActivity{
 
         Log.i("==> URI ", uriRequested);
         return uriRequested;
-    }
-
-   // private void updateListLayout(final JsonArray tracking)
-   // {
-
-
-   // }
-
-    private  void trackingList(byte[] response)
-    {
-        try
-        {
-            String s = new String(response);
-            JsonParser parser = new JsonParser();
-            JsonObject json = parser.parse(s).getAsJsonObject();
-            JsonArray tracked = json.get("tracked_people").getAsJsonArray();
-     //       updateListLayout(tracked);
-        }
-        catch(Exception e)
-        {
-       //     updateListLayout(null);
-        }
-    }
-
-    public ArrayList<String> getFamilyList()
-    {
-        ArrayList<String> ls = new ArrayList<String>();
-        ls.add("1--ab1");
-        ls.add("1--ab2");
-        ls.add("1--ab3");
-        ls.add("1--ab4");
-        ls.add("1--ab5");
-
-        get("", null, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody)
-            {
-                Log.i("ResultDialog ===> ", new String(responseBody));
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error)
-            {
-                Log.i("ErrorDialog ===> ", statusCode + "\n" + error);
-            }
-        });
-        return ls;
-    }
-
-    public ArrayList<String> getFriendList()
-    {
-        ArrayList<String> ls = new ArrayList<String>();
-        ls.add("2--ab1");
-        ls.add("2--ab2");
-        ls.add("2--ab3");
-        ls.add("2--ab4");
-        ls.add("2--ab5");
-
-        get("", null, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody)
-            {
-                Log.i("ResultDialog ===> ", new String(responseBody));
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error)
-            {
-                Log.i("ErrorDialog ===> ", statusCode + "\n" + error);
-            }
-        });
-
-        return ls;
-    }
-
-    public ArrayList<String> getOthersList()
-    {
-        ArrayList<String> ls = new ArrayList<String>();
-        ls.add("3--ab1");
-        ls.add("3--ab2");
-        ls.add("3--ab3");
-        ls.add("3--ab4");
-        ls.add("3--ab5");
-
-        get("", null, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody)
-            {
-                Log.i("ResultDialog ===> ", new String(responseBody));
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error)
-            {
-                Log.i("ErrorDialog ===> ", statusCode + "\n" + error);
-            }
-        });
-
-        return ls;
     }
 
     public String getTrackedUserData()

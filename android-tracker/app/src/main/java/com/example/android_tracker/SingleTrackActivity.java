@@ -168,7 +168,7 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                     }
                 });
             }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(10));
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(60));
     }
 
     @Override

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/blue_grey_700"
+    android:background="@android:color/white"
     tools:context="com.example.android_tracker.ManageActivity">
 
     <EditText
@@ -35,16 +35,18 @@
 
     <Button
         android:id="@+id/add_button"
-        android:layout_width="wrap_content"
+        android:layout_width="184dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginBottom="28dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
+        android:background="@drawable/rounded_button"
         android:text="Add to Tracking List"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_gravity="center"/>
+        app:layout_constraintRight_toRightOf="parent" />
 
     <ScrollView
         android:id="@+id/scrollView2"
@@ -88,6 +90,8 @@
         android:layout_marginRight="8dp"
         android:layout_marginTop="16dp"
         android:text="My List"
+        android:textColor="@android:color/white"
+        android:background="@drawable/rounded_button"
         app:layout_constraintBottom_toTopOf="@+id/scrollView2"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
