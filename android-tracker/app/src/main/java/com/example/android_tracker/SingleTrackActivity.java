@@ -2,13 +2,17 @@ package com.example.android_tracker;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.location.Location;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -124,6 +128,7 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                 }
 
                 runOnUiThread(new Runnable() {
+                    LatLng loc;
                     @Override
                     public void run() {
                         // Obtain the MapFragment and get notified when the map is ready to be used.
@@ -141,7 +146,7 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                                     return;
                                 }
 
-                                LatLng loc = new LatLng(lat, lon);
+                                loc = new LatLng(lat, lon);
                                 mMap.addMarker(new MarkerOptions().title(userDataIntent.getStringExtra("trackeeEmail")).snippet("In Australia.").position(loc));
                                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 13));
 
@@ -150,17 +155,49 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                                     mMap.addMarker(new MarkerOptions().position(oldOriginMarker.getPosition()).title("Alert Origin"));
                                 }
 
+                                Switch alerton = (Switch) findViewById(R.id.alert_switch);
+
+                                if((oldOriginMarker != null) && alerton.isChecked())
+                                {
+                                    // compute the distance
+                                    float[] results = new float[1];
+                                    Location.distanceBetween(oldOriginMarker.getPosition().latitude,
+                                                             oldOriginMarker.getPosition().longitude,
+                                                             loc.latitude, loc.longitude, results);
+
+                                    Float distToOrigin = results[0] / 1600; // Converting merters to miles
+                                    Float rad = Float.valueOf(radius.getSelectedItem().toString());
+
+                                    if(distToOrigin >= rad)
+                                    {
+                                        findViewById(R.id.alert_on).setBackgroundColor(Color.RED);
+                                    }
+                                    else if(distToOrigin + .3f >= rad)
+                                    {
+                                        findViewById(R.id.alert_on).setBackgroundColor(Color.YELLOW);
+                                    }
+                                    else
+                                    {
+                                        findViewById(R.id.alert_on).setBackgroundColor(Color.WHITE);
+                                    }
+                                }
+
+
                                 mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener()
                                 {
                                     @Override
-                                    public void onMapClick(LatLng point)
-                                    {
-                                        // TODO Auto-generated method stub
-                                        if(oldOriginMarker != null)
-                                        {
+                                    public void onMapClick(LatLng point) {
+                                        mMap.clear();
+                                        if (oldOriginMarker != null) {
                                             oldOriginMarker.remove();
                                         }
-                                        oldOriginMarker = mMap.addMarker(new MarkerOptions().position(point).title("Alert Origin"));
+
+                                        if (loc.latitude != 999 && loc.longitude != 999)
+                                        {
+                                            mMap.addMarker(new MarkerOptions().title(userDataIntent.getStringExtra("trackeeEmail")).snippet("In Australia.").position(loc));
+                                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 13));
+                                            oldOriginMarker = mMap.addMarker(new MarkerOptions().position(point).title("Alert Origin"));
+                                        }
                                     }
                                 });
                             }
@@ -168,7 +205,7 @@ public class SingleTrackActivity extends FragmentActivity implements View.OnClic
                     }
                 });
             }
-        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(60));
+        }, TimeUnit.SECONDS.toMillis(0), TimeUnit.SECONDS.toMillis(10));
     }
 
     @Override

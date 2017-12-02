@@ -16,6 +16,7 @@
         android:layout_weight="50" />
 
     <LinearLayout
+        android:id="@+id/alert_on"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="50"
@@ -40,8 +41,8 @@
             android:layout_width="match_parent"
             android:layout_height="67dp"
             android:layout_weight="0.25"
-            android:dropDownWidth="match_parent"
-            android:background="@android:color/white" />
+            android:background="@android:color/white"
+            android:dropDownWidth="match_parent" />
 
         <Button
             android:id="@+id/single_set_area_button"
@@ -50,12 +51,12 @@
             android:layout_gravity="center"
             android:layout_margin="10dp"
             android:layout_weight="0.10"
+            android:background="@drawable/rounded_button"
             android:text="SET RADIUS"
             android:textAlignment="center"
-            android:textSize="18sp"
-            android:textStyle="bold"
             android:textColor="@android:color/white"
-            android:background="@drawable/rounded_button"/>
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/single_mylist_button"
@@ -64,12 +65,12 @@
             android:layout_gravity="center"
             android:layout_margin="10dp"
             android:layout_weight="0.11"
+            android:background="@drawable/rounded_button"
             android:text="My List"
             android:textAlignment="center"
-            android:textSize="18sp"
-            android:textStyle="bold"
             android:textColor="@android:color/white"
-            android:background="@drawable/rounded_button"/>
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </LinearLayout>
