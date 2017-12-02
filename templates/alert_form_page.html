@@ -53,7 +53,7 @@ function initialize() {
 function initializeWithData() {
     var mapOptions = {
         zoom: 12,
-        center: new google.maps.LatLng(30.2, -97.7),
+        center: new google.maps.LatLng(centerLat,centerLon),
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     map = new google.maps.Map(document.getElementById('map_form'),mapOptions);
@@ -115,7 +115,7 @@ function onCircleComplete(circle) {
         drawingManager.setMap(null);
 }
 
-function createAlert() {
+function createAlert(url) {
     startDateVal = $('input[name="alert_time_start"]').val();
     var startDate = startDateVal;
     if (startDateVal.length < 8) {
@@ -143,10 +143,8 @@ function createAlert() {
         alert_owner: $('input[name="alert_owner"]').val(),
     }
     console.log(data);
-    var url = "/rest/alerts";
     var type = "POST";
     if ("{{edit}}" == "True") {
-        url = "/rest/alerts/{{ alert.key.urlsafe() }}";
         type = "PUT"
     }
     $.ajax({
@@ -332,9 +330,15 @@ function createAlert() {
             </div>
             <div class="col-12">
                 <center>
-                    <button type="button" onclick="createAlert()" class="btn btn-primary">
-                        Submit 
-                    </button>
+                    {% if edit %}
+                        <button type="button" onclick="createAlert('/rest/alerts/{{ alert.key.urlsafe() }}')" class="btn btn-primary">
+                            Submit 
+                        </button>
+                    {% else %}
+                        <button type="button" onclick="createAlert('/rest/alerts/')" class="btn btn-primary">
+                            Submit 
+                        </button>
+                    {% endif %}
                 </center>
             </div>
         </div>

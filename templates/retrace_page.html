@@ -68,7 +68,7 @@ function initialize() {
     });
 
     $.ajax({
-        url: '/rest/locations?q=tracked_person%3D%27{{ tracked_user_id }}%27&order=tracked_time',
+        url: '/rest/locations?q=tracked_person%3D%27{{ tracked_user_id }}%27',
         dataType: 'json',
         success: function(data) {
             console.log(data.results);
